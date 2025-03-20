@@ -263,21 +263,25 @@ Object.keys(groupedWinners).forEach(list => {
         alert('No prizes available!');
         return;
     }
-        users.splice(winnerIndex, 1);
-localStorage.setItem('users', JSON.stringify(users));
-
+        
 
 
     const winnerIndex = Math.floor(Math.random() * users.length);
-    const reward = rewards.pop();
-    const winner = users[winnerIndex];
+const reward = rewards.pop();
+const winner = users[winnerIndex];
 
-    winners.push({
-        lot: lotNumber,
-        name: winner.name,
-        coupon: winner.coupon,
-        prize: reward.prize
-    });
+winners.push({
+    list: listNumber,
+    name: winner.name,
+    coupon: winner.coupon,
+    prize: reward.prize
+});
+
+// Remove winner from users after adding to winners
+users.splice(winnerIndex, 1);
+localStorage.setItem('users', JSON.stringify(users));
+        
+
 document.getElementById('luckyDrawSection').classList.remove('hidden');
 
     // Save updated data
@@ -288,6 +292,8 @@ document.getElementById('luckyDrawSection').classList.remove('hidden');
     confetti();
     renderData();
     updateLuckyDrawInfo();
+        users.splice(winnerIndex, 1);
+localStorage.setItem('users', JSON.stringify(users));
 }
     
 function confetti() {
@@ -310,10 +316,10 @@ function startDraw() {
         return;
     }
     
-    lotNumber++;
-    localStorage.setItem('lotNumber', lotNumber);
+    listNumber++;
+    localStorage.setItem('lotNumber', listtNumber);
     showSection('winnerList');
-    alert(`Lucky Draw Started! Lot ${lotNumber}`);
+    alert(`Lucky Draw Started! Lot ${listNumber}`);
 }
 
 
