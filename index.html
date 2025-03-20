@@ -21,7 +21,14 @@
     <h1>Manapalle Bazar - Lucky Draw</h1>
     <h3>Total Coupons: <span id="totalCoupons">0</span></h3>
     
+    <!-- User Registration -->
+    <h2>User Registration</h2>
+    <input type="text" id="userName" placeholder="Name" class="form-control mb-2">
+    <input type="text" id="userMobile" placeholder="Mobile Number" class="form-control mb-2">
+    <button class="btn-custom" onclick="registerUser()">Register</button>
+
     <!-- Admin Section -->
+    <hr>
     <div id="adminSection">
         <h2>Admin Panel - Prize Management</h2>
         <input type="text" id="prizeName" placeholder="Prize Name" class="form-control mb-2">
@@ -47,10 +54,11 @@
         <h2>Winners</h2>
         <table id="winnersTable" class="table table-bordered">
             <thead>
-                <tr><th>Coupon No</th><th>Prize</th></tr>
+                <tr><th>Coupon No</th><th>Name</th><th>Mobile</th><th>Prize</th></tr>
             </thead>
             <tbody></tbody>
         </table>
+        <button class="btn-custom" onclick="exportCSV()">Export CSV</button>
     </div>
 
     <script>
@@ -61,10 +69,24 @@
             document.getElementById('totalCoupons').textContent = users.length;
         }
 
+        function registerUser() {
+            const name = document.getElementById('userName').value.trim();
+            const mobile = document.getElementById('userMobile').value.trim();
+            if (!name || !mobile || mobile.length !== 10) {
+                alert("Please enter a valid name and 10-digit mobile number.");
+                return;
+            }
+
+            const couponCode = "MB" + (users.length + 1).toString().padStart(4, '0');
+            users.push({ name, mobile, couponCode });
+            localStorage.setItem('manapalleUsers', JSON.stringify(users));
+            alert(`User Registered! Coupon Code: ${couponCode}`);
+            updateTotalCoupons();
+        }
+
         function addPrize() {
             const name = document.getElementById('prizeName').value.trim();
             const count = parseInt(document.getElementById('prizeCount').value.trim());
-
             if (!name || isNaN(count) || count <= 0) {
                 alert("Please enter valid prize details.");
                 return;
@@ -84,9 +106,7 @@
                     <tr>
                         <td>${prize.name}</td>
                         <td>${prize.count}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deletePrize(${index})">Delete</button>
-                        </td>
+                        <td><button class="btn btn-danger btn-sm" onclick="deletePrize(${index})">Delete</button></td>
                     </tr>
                 `;
             });
@@ -101,13 +121,8 @@
         }
 
         function startLuckyDraw() {
-            if (users.length === 0) {
-                alert("No participants registered!");
-                return;
-            }
-
-            if (prizes.length === 0) {
-                alert("Please add prizes before starting the draw.");
+            if (users.length < 100) {
+                alert("You need at least 100 participants to run the draw!");
                 return;
             }
 
@@ -115,7 +130,8 @@
             let winners = [];
             prizes.forEach(prize => {
                 for (let i = 0; i < prize.count && shuffled.length > 0; i++) {
-                    winners.push({ couponNumber: shuffled.pop().couponCode, prize: prize.name });
+                    const winner = shuffled.pop();
+                    winners.push({ ...winner, prize: prize.name });
                     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
                 }
             });
@@ -131,13 +147,31 @@
             winners.forEach(w => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${w.couponNumber}</td>
+                        <td>${w.couponCode}</td>
+                        <td>${w.name}</td>
+                        <td>${w.mobile}</td>
                         <td>${w.prize}</td>
                     </tr>`;
             });
         }
 
-        // Initial render on page load
+        function exportCSV() {
+            let csvContent = "Coupon No,Name,Mobile,Prize\n";
+            document.querySelectorAll('#winnersTable tbody tr').forEach(row => {
+                csvContent += Array.from(row.children).map(td => td.textContent).join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'winners.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
         renderPrizes();
         updateTotalCoupons();
     </script>
