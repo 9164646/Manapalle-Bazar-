@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Manapalle Bazar - Lucky Draw</title>
+    <title>Hanumaan traders - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body style="background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
@@ -103,18 +103,31 @@
         renderData();
     }
 
-    // Add user
-    function addUser() {
-        const name = document.getElementById('userName').value.trim();
-        const mobile = document.getElementById('userMobile').value.trim();
-        if (name && mobile) {
-            const coupon = 'MPB-' + (users.length + 1001);
-            users.push({ name, mobile, coupon });
-            localStorage.setItem('users', JSON.stringify(users));
-            renderData();
-            alert("User Added!");
-        } else alert("Fill all fields!");
+    // Random Coupon Generator
+function generateRandomCoupon() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let coupon = 'MPB-';
+    for (let i = 0; i < 6; i++) {
+        coupon += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return coupon;
+}
+
+// Add user with random coupon
+function addUser() {
+    const name = document.getElementById('userName').value.trim();
+    const mobile = document.getElementById('userMobile').value.trim();
+    if (name && mobile) {
+        const coupon = generateRandomCoupon();
+        users.push({ name, mobile, coupon });
+        localStorage.setItem('users', JSON.stringify(users));
+        renderData();
+        alert(`User Added! Coupon: ${coupon}`);
+    } else {
+        alert("Please fill all fields!");
+    }
+}
+
 
     // Add reward
     function addReward() {
