@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
     <style>
-        body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        h1 { color: #FFD700; margin-bottom: 20px; }
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #FFD700; margin-bottom: 20px; text-align: center; }
         .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
         table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
         th, td { padding: 10px; border: 1px solid #ddd; }
@@ -20,11 +20,11 @@
 
 <h1>Manapalle Bazar - Lucky Draw</h1>
 
-<!-- Navigation -->
-<div id="navigation">
+<div id="navigation" class="text-center mb-4">
     <button class="btn-custom" onclick="showSection('userList')">User List</button>
     <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
     <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
+    <button class="btn-custom" onclick="window.location.href='?admin=true'">Admin</button>
 </div>
 
 <!-- User List -->
@@ -40,11 +40,11 @@
 <div id="rewardList" class="hidden">
     <h2>Rewards</h2>
     <table class="table">
-        <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th><th id="adminActionsReward" class="hidden">Actions</th></tr></thead>
+        <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th><th id="adminRewardActions" class="hidden">Actions</th></tr></thead>
         <tbody id="rewardTableBody"></tbody>
     </table>
 
-    <div id="adminRewardActions" class="hidden">
+    <div id="rewardActions" class="hidden">
         <h3>Add Reward</h3>
         <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
         <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
@@ -56,11 +56,11 @@
 <div id="winnerList" class="hidden">
     <h2>Winners</h2>
     <table class="table">
-        <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th id="adminActionsWinner" class="hidden">Actions</th></tr></thead>
+        <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th id="adminWinnerActions" class="hidden">Actions</th></tr></thead>
         <tbody id="winnersTableBody"></tbody>
     </table>
 
-    <div id="adminWinnerActions" class="hidden">
+    <div id="drawActions" class="hidden">
         <h3>Lucky Draw</h3>
         <input type="number" id="lotNumber" placeholder="Lot No." class="form-control mb-2">
         <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
@@ -92,10 +92,10 @@
     function validateAdmin() {
         if (document.getElementById('adminPassword').value === '1234') {
             document.getElementById('adminLogin').classList.add('hidden');
-            document.getElementById('adminActionsReward').classList.remove('hidden');
-            document.getElementById('adminActionsWinner').classList.remove('hidden');
             document.getElementById('adminRewardActions').classList.remove('hidden');
             document.getElementById('adminWinnerActions').classList.remove('hidden');
+            document.getElementById('rewardActions').classList.remove('hidden');
+            document.getElementById('drawActions').classList.remove('hidden');
             renderData();
         } else {
             alert('Wrong password!');
