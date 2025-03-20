@@ -106,19 +106,32 @@
         renderData();
     }
 
-    function renderData() {
-        document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
-            `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.coupon}</td></tr>`
-        ).join('');
+  function addUser() {
+    const name = document.getElementById('userName').value.trim();
+    const mobile = document.getElementById('userMobile').value.trim();
 
-        document.getElementById('rewardTableBody').innerHTML = rewards.map((r, i) =>
-            `<tr><td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td></tr>`
-        ).join('');
-
-        document.getElementById('winnersTableBody').innerHTML = winners.map((w, i) =>
-            `<tr><td>${w.lot}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td></tr>`
-        ).join('');
+    if (name === '' || mobile === '') {
+        alert('Please fill in all fields!');
+        return;
     }
+    if (!/^\d{10}$/.test(mobile)) {
+        alert('Please enter a valid 10-digit mobile number!');
+        return;
+    }
+    const newCoupon = 'MPB-' + String(users.length + 1001);
+    users.push({ name, mobile, coupon: newCoupon });
+    localStorage.setItem('users', JSON.stringify(users));
+
+    // Clear input fields and refresh user list
+    document.getElementById('userName').value = '';
+    document.getElementById('userMobile').value = '';
+
+    alert(`User added! Coupon Code: ${newCoupon}`);
+    confetti();
+    renderData();
+}
+
+    
 
     function addReward() {
         const prize = document.getElementById('rewardPrize').value.trim();
@@ -129,6 +142,7 @@
             renderData();
         } else alert('Please fill in both fields!');
     }
+
 
     function drawWinner() {
         const lot = document.getElementById('lotNumber').value;
