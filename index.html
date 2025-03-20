@@ -7,6 +7,7 @@
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
         h1 { color: #FFD700; text-align: center; margin-bottom: 20px; }
@@ -44,6 +45,8 @@
     <div id="adminPanel" class="hidden">
         <h2>Admin Panel</h2>
         <button class="btn-custom" onclick="logout()">Logout</button>
+        <button class="btn-custom" onclick="exportCSV()">Export CSV</button>
+        <button class="btn-custom" onclick="exportPDF()">Export PDF</button>
 
         <!-- User List -->
         <h3>Registered Users</h3>
@@ -69,6 +72,12 @@
     <script>
         let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
         let currentDraw = Math.floor(users.length / 100) + 1;
+
+        // Update Total Users and Current Draw
+        function updateCounts() {
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('currentDraw').textContent = currentDraw;
+        }
 
         function checkAdmin() {
             const password = document.getElementById('adminPassword').value;
@@ -100,16 +109,10 @@
             localStorage.setItem('manapalleUsers', JSON.stringify(users));
             alert(`User Registered! Coupon: ${couponCode}`);
             renderUsers();
-
-            // Auto draw after every 100 participants
-            if (users.length % 100 === 0) {
-                startLuckyDraw();
-            }
+            updateCounts();
         }
 
         function renderUsers() {
-            document.getElementById('totalUsers').textContent = users.length;
-            document.getElementById('currentDraw').textContent = currentDraw;
             const userTable = document.querySelector('#userTable tbody');
             userTable.innerHTML = '';
             users.forEach(user => {
@@ -127,23 +130,10 @@
                         <td>${user.mobile}</td>
                         <td>${user.couponCode}</td>
                         <td>
-                            <button onclick="editUser(${index})" class="btn btn-warning btn-sm">Edit</button>
                             <button onclick="deleteUser(${index})" class="btn btn-danger btn-sm">Delete</button>
                         </td>
                     </tr>`;
             });
-        }
-
-        function editUser(index) {
-            const newName = prompt("Enter new name:", users[index].name);
-            const newMobile = prompt("Enter new mobile:", users[index].mobile);
-            if (newName && newMobile) {
-                users[index].name = newName;
-                users[index].mobile = newMobile;
-                localStorage.setItem('manapalleUsers', JSON.stringify(users));
-                alert("User Updated!");
-                renderAdminUsers();
-            }
         }
 
         function deleteUser(index) {
@@ -153,20 +143,36 @@
                 alert("User Deleted!");
                 renderAdminUsers();
                 renderUsers();
+                updateCounts();
             }
         }
 
-        function startLuckyDraw() {
-            if (users.length < 100) return alert("Minimum 100 participants required for a draw!");
-
-            for (let i = 0; i < 10; i++) {
-                const winner = users[Math.floor(Math.random() * users.length)];
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                alert(`🎉 Winner: ${winner.name} (Coupon: ${winner.couponCode})`);
-            }
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Name,Mobile,Coupon Code\n";
+            users.forEach(user => {
+                csvContent += `${user.name},${user.mobile},${user.couponCode}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "manapalle_users.csv");
+            document.body.appendChild(link);
+            link.click();
         }
 
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Manapalle Bazar - Lucky Draw", 20, 20);
+            let y = 30;
+            users.forEach(user => {
+                doc.text(`${user.name} - ${user.couponCode}`, 20, y);
+                y += 10;
+            });
+            doc.save("manapalle_users.pdf");
+        }
+
+        // Initial Render
         renderUsers();
+        updateCounts();
     </script>
-</body>
-</html>
