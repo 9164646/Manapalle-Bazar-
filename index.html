@@ -14,24 +14,18 @@
 
 <!-- Navigation -->
 <div id="navigation" class="text-center mb-4">
-    <button class="btn btn-warning m-2" onclick="window.location.href='?admin=true'">Admin</button>
     <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
     <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
+    <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
     <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
     <button class="btn btn-danger m-2" onclick="resetData()">Reset Data</button>
+    <button id="logoutBtn" class="btn btn-danger m-2 hidden" onclick="logoutAdmin()">Logout</button>
 </div>
 
 <style>
-    .hidden {
-        display: none;
-    }
-    .btn-warning {
-        transition: 0.2s;
-    }
-    .btn-warning:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 15px #FFD700;
-    }
+    .hidden { display: none; }
+    .btn-warning { transition: 0.2s; }
+    .btn-warning:hover { transform: scale(1.1); box-shadow: 0 0 15px #FFD700; }
     .winner-highlight {
         color: #FFD700;
         font-size: 24px;
@@ -39,9 +33,8 @@
         animation: glow 1.5s infinite;
     }
     @keyframes glow {
-        0% { text-shadow: 0 0 5px #FFD700; }
+        0%, 100% { text-shadow: 0 0 5px #FFD700; }
         50% { text-shadow: 0 0 20px #FFD700; }
-        100% { text-shadow: 0 0 5px #FFD700; }
     }
 </style>
 
@@ -68,332 +61,116 @@
     <button class="btn btn-warning" onclick="addUser()">Add User</button>
 </div>
 
-<!-- Toast Container -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="liveToast" class="toast text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-body" id="toastMessage"></div>
-    </div>
-</div>
-
-<!-- Reward List -->
-<div id="rewardList" class="hidden">
-    <h2>Rewards</h2>
-    <table class="table table-dark">
-        <thead><tr><th>S.No</th><th>Prize</th><th>Gift</th><th id="adminRewardActions" class="hidden">Actions</th></tr></thead>
-        <tbody id="rewardTableBody"></tbody>
-    </table>
-
-    <div id="rewardActions" class="hidden">
-        <h3>Add Reward</h3>
-        <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
-        <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
-        <button class="btn btn-warning" onclick="addReward()">Add Reward</button>
-    </div>
-</div>
-
 <!-- Winner List -->
 <div id="winnerList" class="hidden">
     <h2>Winners</h2>
     <button class="btn btn-success mb-2" onclick="exportToCSV('winners')">Export Winners</button>
     <table class="table table-dark">
-        <thead><tr><th>List No</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th id="adminWinnerActions" class="hidden">Actions</th></tr></thead>
+        <thead><tr><th>List No</th><th>Name</th><th>Coupon Code</th><th>Prize</th></tr></thead>
         <tbody id="winnersTableBody"></tbody>
     </table>
-
-</div>
-<!-- Lucky Draw Section -->
-<div id="luckyDrawSection" class="text-center mb-4">
-    <h2>Lucky Draw</h2>
-    <p><strong>Total Users:</strong> <span id="totalUsers">0</span></p>
-    <p><strong>Total Prizes:</strong> <span id="totalPrizes">0</span></p>
-    <button class="btn btn-warning" onclick="startDraw()">Start Draw</button>
 </div>
 
 <!-- Admin Login -->
-<div id="adminLogin" class="hidden">
+<div id="adminLogin" class="text-center">
     <h2>Admin Login</h2>
     <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
     <button class="btn btn-warning" onclick="validateAdmin()">Login</button>
 </div>
 
-<!-- Logout Button -->
-<div id="adminLogout" class="hidden text-center">
-    <button class="btn btn-danger" onclick="logoutAdmin()">Logout</button>
-</div>
-
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const isAdmin = urlParams.get('admin') === 'true';
-    let users = JSON.parse(localStorage.getItem('users')) || [
-        { name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' }
-    ];
-    let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
+    // Data Handling
+    let users = JSON.parse(localStorage.getItem('users')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
-    let listNumber = JSON.parse(localStorage.getItem('listtNumber')) || 1;
-
-
-    if (isAdmin) document.getElementById('adminLogin').classList.remove('hidden');
+    let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
+    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
 
     function validateAdmin() {
-        if (document.getElementById('adminPassword').value === '1234') {
+        const password = document.getElementById('adminPassword').value;
+        if (password === '1234') {
+            sessionStorage.setItem('isAdmin', 'true');
+            isAdmin = true;
             document.getElementById('adminLogin').classList.add('hidden');
-            document.getElementById('adminRewardActions').classList.remove('hidden');
-            document.getElementById('adminWinnerActions').classList.remove('hidden');
-            document.getElementById('rewardActions').classList.remove('hidden');
-            document.getElementById('drawActions').classList.remove('hidden');
-            document.getElementById('adminLogout').classList.remove('hidden');
-            renderData();
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            showSection('userList');
         } else alert('Wrong password!');
     }
 
     function logoutAdmin() {
-        window.location.href = window.location.pathname;
+        sessionStorage.removeItem('isAdmin');
+        isAdmin = false;
+        window.location.reload();
     }
 
-   
-
-    function showToast(message) {
-        const toast = document.getElementById('liveToast');
-        document.getElementById('toastMessage').innerText = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
     function showSection(section) {
-        const sections = ['userList', 'addUserSection', 'winnerSection'];
-        sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
+        ['userList', 'addUserSection', 'winnerList', 'winnerSection'].forEach(sec =>
+            document.getElementById(sec).classList.add('hidden')
+        );
         document.getElementById(section).classList.remove('hidden');
         renderData();
     }
 
-    function confetti() {
-        window.confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-    
-  function addUser() {
+    function addUser() {
         const name = document.getElementById('userName').value.trim();
         const mobile = document.getElementById('userMobile').value.trim();
-        if (name === '' || mobile === '') {
-            showToast('Please fill in all fields!');
-            return;
-        }
-        if (!/^\d{10}$/.test(mobile)) {
-            showToast('Please enter a valid 10-digit mobile number!');
-            return;
-        }
+        if (!name || !/^\d{10}$/.test(mobile)) return alert('Invalid Name or Mobile!');
         const newCoupon = 'MPB-' + String(users.length + 1001);
         users.push({ name, mobile, coupon: newCoupon });
         localStorage.setItem('users', JSON.stringify(users));
-        document.getElementById('userName').value = '';
-        document.getElementById('userMobile').value = '';
-        showToast(`User added! Coupon Code: ${newCoupon}`);
-        confetti();
         renderData();
-  }
-      
-    function deleteUser(index) {
-        if (confirm(`Are you sure you want to delete ${users[index].name}?`)) {
-            users.splice(index, 1);
-            localStorage.setItem('users', JSON.stringify(users));
-            showToast('User deleted!');
-            renderData();
-        }
+        alert(`User added! Coupon: ${newCoupon}`);
+    }
+
+    function drawWinner() {
+        if (users.length === 0) return alert('No users to draw from!');
+        showSection('winnerSection');
+        const winnerIndex = Math.floor(Math.random() * users.length);
+        const winner = users[winnerIndex];
+        winners.push({ list: listNumber, ...winner });
+        users.splice(winnerIndex, 1);
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('winners', JSON.stringify(winners));
+        localStorage.setItem('listNumber', ++listNumber);
+        confetti();
+        document.getElementById('winnerDisplay').innerText = `${winner.name} (Coupon: ${winner.coupon})`;
+        renderData();
     }
 
     function resetData() {
-        if (confirm('Are you sure you want to reset all data?')) {
-            localStorage.clear();
-            users = [{ name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' }];
-            localStorage.setItem('users', JSON.stringify(users));
-            showToast('All data reset!');
-            renderData();
-        }
+        if (!confirm('Reset all data?')) return;
+        localStorage.clear();
+        users = [];
+        winners = [];
+        listNumber = 1;
+        renderData();
     }
 
-    
+    function renderData() {
+        const userTableBody = document.getElementById('userTableBody');
+        userTableBody.innerHTML = users.map((u, i) =>
+            `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.coupon}</td></tr>`
+        ).join('');
 
-        function renderData() {
-    const userTableBody = document.getElementById('userTableBody');
-    userTableBody.innerHTML = '';
-    users.forEach((user, index) => {
-        userTableBody.innerHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${user.name}</td>
-                <td>${user.coupon}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
-            </tr>
-        `;
-    });
-    updateLuckyDrawInfo();
-}
-
-
-    function addReward() {
-        const prize = document.getElementById('rewardPrize').value.trim();
-        const gift = document.getElementById('rewardGift').value.trim();
-        if (prize && gift) {
-            rewards.push({ prize, gift });
-            localStorage.setItem('rewards', JSON.stringify(rewards));
-            renderData();
-        } else alert('Please fill in both fields!');
+        const winnersTableBody = document.getElementById('winnersTableBody');
+        winnersTableBody.innerHTML = winners.map((w, i) =>
+            `<tr><td>${w.list}</td><td>${w.name}</td><td>${w.coupon}</td></tr>`
+        ).join('');
     }
-
-
-
-
 
     function exportToCSV(type) {
-        let data = type === 'users' ? users : winners;
-        let csv = data.map(row => Object.values(row).join(",")).join("\n");
-        let link = document.createElement('a');
+        const data = type === 'users' ? users : winners;
+        const csv = data.map(row => Object.values(row).join(",")).join("\n");
+        const link = document.createElement('a');
         link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
         link.download = `${type}.csv`;
         link.click();
     }
 
-  
-
-
-    // Populate Reward List
-    const rewardTableBody = document.getElementById('rewardTableBody');
-    rewardTableBody.innerHTML = '';
-    rewards.forEach((reward, index) => {
-        rewardTableBody.innerHTML += `<tr><td>${index + 1}</td><td>${reward.prize}</td><td>${reward.gift}</td></tr>`;
-    });
-
-    // Group winners by list number
-const winnerListSection = document.getElementById('winnerList');
-winnerListSection.innerHTML = '<h2>Winners</h2><button class="btn btn-success mb-2" onclick="exportToCSV(\'winners\')">Export Winners</button>';
-
-const groupedWinners = winners.reduce((acc, winner) => {
-    if (!acc[winner.listt]) acc[winner.list] = [];
-    acc[winner.list].push(winner);
-    return acc;
-}, {});
-
-// Create a separate table for each list
-Object.keys(groupedWinners).forEach(list => {
-    winnerListSection.innerHTML += `
-        <h3>List ${list}</h3>
-        <table class="table table-dark">
-            <thead><tr><th>Name</th><th>Coupon Code</th><th>Prize</th></tr></thead>
-            <tbody>
-                ${groupedWinners[list].map(winner => `
-                    <tr>
-                        <td>${winner.name}</td>
-                        <td>${winner.coupon}</td>
-                        <td>${winner.prize}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-});
-
-    // Initialize listNumber if not already set
-let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
-
-function drawWinner() {
-    if (users.length === 0) {
-        showToast('No users to draw from!');
-        return;
-    }
-    if (rewards.length === 0) {
-        showToast('No prizes available!');
-        return;
+    function confetti() {
+        window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     }
 
-    // Animation: Spin the names for excitement
-    showSection('winnerSection');
-    const winnerDisplay = document.getElementById('winnerDisplay');
-    winnerDisplay.innerHTML = "Drawing...";
-    
-    let counter = 15;
-    let drawAnimation = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * users.length);
-        winnerDisplay.innerText = users[randomIndex].name;
-        counter--;
-        if (counter <= 0) {
-            clearInterval(drawAnimation);
-
-            // Pick the actual winner
-            const winnerIndex = Math.floor(Math.random() * users.length);
-            const winner = users[winnerIndex];
-            const reward = rewards.pop();  // Assign the latest reward
-
-            // Add the winner to the winners list
-            winners.push({
-                lot: listNumber,
-                name: winner.name,
-                coupon: winner.coupon,
-                prize: reward.prize
-            });
-
-            // Remove winner from users
-            users.splice(winnerIndex, 1);
-            
-            // Save updated data
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('winners', JSON.stringify(winners));
-            localStorage.setItem('rewards', JSON.stringify(rewards));
-
-            // Show the final winner announcement
-            winnerDisplay.innerHTML = `${winner.name} (Coupon: ${winner.coupon}) won ${reward.prize}!`;
-            showToast(`${winner.name} is the winner of ${reward.prize}!`);
-            confetti();
-            renderData();
-            updateLuckyDrawInfo();
-        }
-    }, 100);
-}
-
-        function updateLuckyDrawInfo() {
-    document.getElementById('totalUsers').innerText = users.length;
-    document.getElementById('totalPrizes').innerText = rewards.length;
-}
-
-
-    function deleteUser(index) {
-        if (confirm(`Are you sure you want to delete ${users[index].name}?`)) {
-            users.splice(index, 1);
-            localStorage.setItem('users', JSON.stringify(users));
-            showToast('User deleted!');
-            renderData();
-        }
-    }
-
-    function resetData() {
-        if (confirm('Are you sure you want to reset all data?')) {
-            localStorage.clear();
-            users = [{ name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' }];
-            localStorage.setItem('users', JSON.stringify(users));
-            showToast('All data reset!');
-            renderData();
-        }
-    }
-
-    function renderData() {
-        const userTableBody = document.getElementById('userTableBody');
-        userTableBody.innerHTML = '';
-        users.forEach((user, index) => {
-            userTableBody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${user.name}</td>
-                    <td>${user.coupon}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    renderData();
-
-
-
+    if (isAdmin) showSection('userList');
 </script>
 
 </body>
