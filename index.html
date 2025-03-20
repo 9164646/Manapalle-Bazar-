@@ -68,6 +68,8 @@
 
     <!-- Confetti Canvas -->
 <canvas id="confetti-canvas"></canvas>
+    <!-- Winner Sound -->
+<audio id="winnerSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
 <script>
     // Data handling
@@ -97,13 +99,64 @@
     }
     checkAdmin();
 
-    // Section handling
-    function showSection(section) {
-        ['userList', 'addUserSection', 'rewardList', 'winnerList'].forEach(sec => {
-            document.getElementById(sec).classList.add('hidden');
+    // Confetti Canvas
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const confetti = [];
+
+    function showConfetti() {
+        for (let i = 0; i < 200; i++) {
+            confetti.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 8 + 2,
+                speed: Math.random() * 4 + 2,
+            });
+        }
+        animateConfetti();
+        setTimeout(() => {
+            confetti.length = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 3000);
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach((c) => {
+            c.y += c.speed;
+            ctx.fillStyle = c.color;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+            ctx.fill();
         });
-        document.getElementById(section).classList.remove('hidden');
-        renderData();
+        requestAnimationFrame(animateConfetti);
+    }
+
+    // Draw Winner with Confetti and Animation
+    function drawWinner() {
+        if (users.length === 0 || rewards.length === 0) return alert("No users or prizes left!");
+
+        const winnerIndex = Math.floor(Math.random() * users.length);
+        const reward = rewards.pop();
+        const winner = users.splice(winnerIndex, 1)[0];
+
+        winners.push({ ...winner, prize: reward.prize });
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('rewards', JSON.stringify(rewards));
+        localStorage.setItem('winners', JSON.stringify(winners));
+
+        showConfetti();
+        document.getElementById("winnerSound").play();
+
+        const winnerPopup = document.getElementById("winnerPopup");
+        const winnerName = document.getElementById("winnerName");
+        winnerName.textContent = `${winner.name} wins ${reward.prize}!`;
+
+        winnerPopup.classList.remove("hidden");
+        setTimeout(() => winnerPopup.classList.add("hidden"), 5000);
     }
 
     // Random Coupon Generator
@@ -143,61 +196,9 @@ function addUser() {
         } else alert("Enter a reward!");
     }
 
-    // Draw Winner with Confetti
-    function drawWinner() {
-        if (users.length === 0 || rewards.length === 0) return alert("No users or prizes left!");
+    
 
-        const winnerIndex = Math.floor(Math.random() * users.length);
-        const reward = rewards.pop();
-        const winner = users.splice(winnerIndex, 1)[0];
-
-        winners.push({ ...winner, prize: reward.prize });
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('rewards', JSON.stringify(rewards));
-        localStorage.setItem('winners', JSON.stringify(winners));
-
-        showConfetti();
-        setTimeout(() => {
-            alert(`${winner.name} wins ${reward.prize}!`);
-            renderData();
-        }, 2000);
-    }
-
-    // Confetti Animation
-    const canvas = document.getElementById("confetti-canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const confetti = [];
-
-    function showConfetti() {
-        for (let i = 0; i < 200; i++) {
-            confetti.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height - canvas.height,
-                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-                size: Math.random() * 8 + 2,
-                speed: Math.random() * 4 + 2,
-            });
-        }
-        animateConfetti();
-        setTimeout(() => {
-            confetti.length = 0;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }, 3000);
-    }
-
-    function animateConfetti() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        confetti.forEach((c) => {
-            c.y += c.speed;
-            ctx.fillStyle = c.color;
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        requestAnimationFrame(animateConfetti);
-    }
+    
 
 
     // Reset data
@@ -245,12 +246,48 @@ function addUser() {
 
 <style>
     .hidden { display: none; }
-    .hidden { display: none; }
+
+    /* Confetti Canvas */
     #confetti-canvas {
         position: fixed;
         top: 0;
         left: 0;
         pointer-events: none;
+    }
+
+    /* Winner Animation */
+    #winnerPopup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: #FFD700;
+        text-shadow: 2px 2px 10px #FFD700;
+        padding: 20px;
+        border: 3px solid #FFD700;
+        border-radius: 10px;
+        z-index: 1000;
+        animation: zoomIn 0.5s ease-out;
+    }
+
+    #winnerName {
+        font-size: 2.5rem;
+        text-align: center;
+        animation: bounce 1s infinite;
+    }
+
+    /* Zoom In Animation */
+    @keyframes zoomIn {
+        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    /* Bounce Animation */
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-20px); }
+        60% { transform: translateY(-10px); }
     }
 </style>
 
