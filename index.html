@@ -94,21 +94,69 @@
         let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
 
         // Initial data
-        const users = [
-            { name: 'John Doe', mobile: '9876543210', couponCode: 'MPB-10001' },
-            { name: 'Jane Doe', mobile: '9876543211', couponCode: 'MPB-10002' },
-            { name: 'Alice Smith', mobile: '9876543212', couponCode: 'MPB-10003' },
-            { name: 'Bob Johnson', mobile: '9876543213', couponCode: 'MPB-10004' }
-        ];
+const users = [
+    { name: 'John Doe', mobile: '9876543210', couponCode: 'MPB-10001' },
+    { name: 'Jane Doe', mobile: '9876543211', couponCode: 'MPB-10002' },
+    { name: 'Alice Smith', mobile: '9876543212', couponCode: 'MPB-10003' },
+    { name: 'Bob Johnson', mobile: '9876543213', couponCode: 'MPB-10004' }
+];
 
-        const rewards = [
-            { prize: "1st Prize", reward: 'Smartphone' },
-            { prize: "2nd Prize", reward: 'Smartwatch' },
-            { prize: "3rd Prize", reward: 'Gift Card $50' },
-            { prize: "Consolation Prize", reward: 'Bluetooth Headphones' }
-        ];
+const rewards = [
+    { prize: "1st Prize", reward: 'Smartphone' },
+    { prize: "2nd Prize", reward: 'Smartwatch' },
+    { prize: "3rd Prize", reward: 'Gift Card $50' },
+    { prize: "Consolation Prize", reward: 'Bluetooth Headphones' }
+];
 
-        const winners = [];
+const winners = [];
+
+function renderUserList() {
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = users.map((u, i) =>
+        `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`
+    ).join('');
+}
+
+function renderRewardList() {
+    const tbody = document.getElementById('rewardTableBody');
+    tbody.innerHTML = rewards.map(r =>
+        `<tr><td>${r.prize}</td><td>${r.reward}</td></tr>`
+    ).join('');
+}
+
+function renderWinners() {
+    const tbody = document.getElementById('winnersTableBody');
+    tbody.innerHTML = winners.map((w, i) =>
+        `<tr><td>${w.prize}</td><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`
+    ).join('');
+}
+
+function drawWinner() {
+    if (users.length === 0 || rewards.length === 0) {
+        alert('No participants or rewards available!');
+        return;
+    }
+    const winner = users[Math.floor(Math.random() * users.length)];
+    const reward = rewards.shift();
+    winners.push({ prize: reward.prize, name: winner.name, couponCode: winner.couponCode, reward: reward.reward });
+
+    alert(`Winner: ${winner.name} - Coupon: ${winner.couponCode} - ${reward.prize}: ${reward.reward}`);
+    confetti();
+    renderRewardList();
+    renderWinners();
+}
+
+function showSection(sectionId) {
+    ['userList', 'rewardList', 'winnerList', 'adminPanel'].forEach(id =>
+        document.getElementById(id).classList.add('hidden')
+    );
+    document.getElementById(sectionId).classList.remove('hidden');
+}
+
+// Initial render
+renderUserList();
+renderRewardList();
+renderWinners();
 
         function registerUser() {
             const name = document.getElementById('userName').value.trim();
@@ -189,11 +237,6 @@
             renderUserList();
             renderWinners();
         }
-
-        // Initial render
-        renderUserList();
-        renderRewardList();
-        renderWinners();
 
         
  
