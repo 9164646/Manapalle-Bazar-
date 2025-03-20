@@ -93,6 +93,23 @@
         let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
         let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
 
+        // Initial data
+        const users = [
+            { name: 'John Doe', mobile: '9876543210', couponCode: 'MPB-10001' },
+            { name: 'Jane Doe', mobile: '9876543211', couponCode: 'MPB-10002' },
+            { name: 'Alice Smith', mobile: '9876543212', couponCode: 'MPB-10003' },
+            { name: 'Bob Johnson', mobile: '9876543213', couponCode: 'MPB-10004' }
+        ];
+
+        const rewards = [
+            { prize: "1st Prize", reward: 'Smartphone' },
+            { prize: "2nd Prize", reward: 'Smartwatch' },
+            { prize: "3rd Prize", reward: 'Gift Card $50' },
+            { prize: "Consolation Prize", reward: 'Bluetooth Headphones' }
+        ];
+
+        const winners = [];
+
         function registerUser() {
             const name = document.getElementById('userName').value.trim();
             const mobile = document.getElementById('userMobile').value.trim();
