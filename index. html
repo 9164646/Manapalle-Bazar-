@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lucky Draw</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body { background: #000; color: #fff; text-align: center; font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #FFD700; margin-bottom: 20px; }
+        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        #countdown { font-size: 48px; color: #FFD700; margin: 20px 0; }
+        #winnerList { margin-top: 20px; }
+        #winnersTable { width: 100%; color: #000; background: #fff; margin-top: 20px; border: 1px solid #ddd; }
+        th, td { padding: 10px; border: 1px solid #ddd; }
+        .hidden { display: none; }
+        .winner-announcement { animation: bounce 1s ease; color: #FFD700; font-size: 24px; margin-top: 10px; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-30px); } 60% { transform: translateY(-15px); } }
+    </style>
+</head>
+<body>
+    <h1>Lucky Draw</h1>
+
+    <div class="mb-3">
+        <label for="totalCoupons" class="form-label">Total Coupons:</label>
+        <input type="number" id="totalCoupons" class="form-control w-25 mx-auto" min="1" max="10000" value="100">
+    </div>
+
+    <button class="btn-custom" onclick="startLuckyDraw()">Start Draw</button>
+    <button class="btn-custom" onclick="exportPDF()">Export PDF</button>
+    <button class="btn-custom" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-custom" onclick="resetDraw()">Reset</button>
+
+    <h3>Total Coupons: <span id="totalParticipants">100</span></h3>
+
+    <h2 id="countdown" class="hidden"></h2>
+
+    <div id="winnerList" class="hidden">
+        <h2>Winners</h2>
+        <table id="winnersTable" class="table table-bordered">
+            <thead><tr><th>Coupon No</th><th>Prize</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        let participants = [];
+        let winners = [];
+        const prizeStructure = [
+            { prize: '6 grams Gold', count: 1 },
+            { prize: '4 grams Gold', count: 2 },
+            { prize: '3 grams Gold', count: 3 },
+            { prize: '2 grams Gold', count: 4 },
+            { prize: '1 gram Gold', count: 5 },
+            { prize: '0.5 grams Silver', count: 6 },
+            { prize: 'Consolation Prize', count: 10 }
+        ];
+
+        // Update the total participants when the total coupons are edited
+        document.getElementById('totalCoupons').addEventListener('input', (e) => {
+            const total = parseInt(e.target.value) || 0;
+            document.getElementById('totalParticipants').textContent = total;
+        });
+
+        function resetDraw() {
+            winners = [];
+            document.getElementById('winnersTable').querySelector('tbody').innerHTML = '';
+            alert("Draw Reset!");
+        }
+
+        async function startLuckyDraw() {
+            const totalCoupons = parseInt(document.getElementById('totalCoupons').value);
+            if (totalCoupons <= 0) {
+                alert("Please enter a valid number of coupons.");
+                return;
+            }
+
+            participants = Array.from({ length: totalCoupons }, (_, i) => i + 1);
+            let shuffled = [...participants].sort(() => 0.5 - Math.random());
+            winners = [];
+
+            for (const prize of prizeStructure) {
+                for (let i = 0; i < prize.count && shuffled.length > 0; i++) {
+                    await countdown(3);
+                    const winnerCoupon = shuffled.pop();
+                    winners.push({ couponNumber: winnerCoupon, prize: prize.prize });
+
+                    // Announce the winner
+                    announceWinner(winnerCoupon, prize.prize);
+                    triggerConfetti();
+                    renderWinners();
+                    await sleep(2000);
+                }
+            }
+
+            renderWinners();
+        }
+
+        function announceWinner(couponNumber, prize) {
+            const message = `Coupon Number ${couponNumber} wins ${prize}`;
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        function triggerConfetti() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        }
+
+        function renderWinners() {
+            const winnerList = document.getElementById('winnerList');
+            winnerList.classList.remove('hidden');
+            const tbody = document.querySelector('#winnersTable tbody');
+            tbody.innerHTML = '';
+            winners.forEach(w => {
+                tbody.innerHTML += `
+                    <tr class="winner-announcement">
+                        <td>${w.couponNumber}</td>
+                        <td>${w.prize}</td>
+                    </tr>`;
+            });
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Lucky Draw Winners", 20, 10);
+            winners.forEach((w, i) => doc.text(`${i + 1}. Coupon ${w.couponNumber} - ${w.prize}`, 20, 20 + i * 10));
+            doc.save('winners.pdf');
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Coupon No,Prize\n";
+            winners.forEach(w => {
+                csvContent += `${w.couponNumber},${w.prize}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "winners.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        async function countdown(seconds) {
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.classList.remove('hidden');
+            for (let i = seconds; i > 0; i--) {
+                countdownElement.textContent = i;
+                await sleep(1000);
+            }
+            countdownElement.classList.add('hidden');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
