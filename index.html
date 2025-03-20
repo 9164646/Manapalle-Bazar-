@@ -7,14 +7,13 @@
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
         body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         h1 { color: #FFD700; margin-bottom: 20px; }
-        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; cursor: pointer; margin: 5px; }
         table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
         th, td { padding: 10px; border: 1px solid #ddd; }
-        #winnerList { margin-top: 20px; }
+        #prizeList { margin-top: 20px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -22,83 +21,83 @@
     <h1>Manapalle Bazar - Lucky Draw</h1>
     <h3>Total Coupons: <span id="totalCoupons">0</span></h3>
     
-    <!-- Registration Form -->
-    <div id="registrationForm">
-        <h2>Register</h2>
-        <input type="text" id="userName" placeholder="Enter Name" class="form-control mb-2">
-        <input type="text" id="userMobile" placeholder="Enter Mobile Number" class="form-control mb-2">
-        <button class="btn-custom" onclick="registerUser()">Register</button>
-        <hr>
-    </div>
+    <!-- Admin Section -->
+    <div id="adminSection">
+        <h2>Admin Panel - Prize Management</h2>
+        <input type="text" id="prizeName" placeholder="Prize Name" class="form-control mb-2">
+        <input type="number" id="prizeCount" placeholder="Number of Winners" class="form-control mb-2">
+        <button class="btn-custom" onclick="addPrize()">Add Prize</button>
 
-    <!-- Registered Users List -->
-    <div id="registeredUsers">
-        <h2>Registered Users</h2>
-        <table id="usersTable" class="table table-bordered">
+        <h3>Prizes</h3>
+        <table id="prizeTable" class="table table-bordered">
             <thead>
-                <tr><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr>
+                <tr><th>Prize</th><th>Winners</th><th>Actions</th></tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
-    <!-- Lucky Draw -->
-    <button class="btn-custom mt-3" onclick="startLuckyDraw()">Start Lucky Draw</button>
+    <hr>
 
-    <!-- Winner Lists -->
-    <div id="allWinnerLists" class="hidden">
-        <h2>Past Draws</h2>
-        <div id="winnerListsContainer"></div>
+    <!-- Lucky Draw -->
+    <button class="btn-custom" onclick="startLuckyDraw()">Start Lucky Draw</button>
+
+    <!-- Winners List -->
+    <div id="winnerList" class="hidden">
+        <h2>Winners</h2>
+        <table id="winnersTable" class="table table-bordered">
+            <thead>
+                <tr><th>Coupon No</th><th>Prize</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
-        let winnerLists = JSON.parse(localStorage.getItem('manapalleWinnerLists')) || [];
+        let prizes = JSON.parse(localStorage.getItem('manapallePrizes')) || [];
 
         function updateTotalCoupons() {
             document.getElementById('totalCoupons').textContent = users.length;
         }
 
-        function registerUser() {
-            const name = document.getElementById('userName').value.trim();
-            const mobile = document.getElementById('userMobile').value.trim();
+        function addPrize() {
+            const name = document.getElementById('prizeName').value.trim();
+            const count = parseInt(document.getElementById('prizeCount').value.trim());
 
-            if (!name || !mobile || mobile.length !== 10) {
-                alert('Please enter a valid name and 10-digit mobile number.');
+            if (!name || isNaN(count) || count <= 0) {
+                alert("Please enter valid prize details.");
                 return;
             }
 
-            const couponCode = `MPB-${Math.floor(1000 + Math.random() * 9000)}`;
-            users.push({ name, mobile, couponCode });
-
-            localStorage.setItem('manapalleUsers', JSON.stringify(users));
-            alert(`Registered! Your Coupon Code: ${couponCode}`);
-
-            // Reset inputs
-            document.getElementById('userName').value = '';
-            document.getElementById('userMobile').value = '';
-
-            renderUserList();
-            updateTotalCoupons();
-
-            // Automatic draw every 100 members
-            if (users.length % 100 === 0) {
-                startLuckyDraw();
-            }
+            prizes.push({ name, count });
+            localStorage.setItem('manapallePrizes', JSON.stringify(prizes));
+            alert("Prize added!");
+            renderPrizes();
         }
 
-        function renderUserList() {
-            const tbody = document.querySelector('#usersTable tbody');
+        function renderPrizes() {
+            const tbody = document.querySelector('#prizeTable tbody');
             tbody.innerHTML = '';
-            users.forEach(user => {
+            prizes.forEach((prize, index) => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${user.name}</td>
-                        <td>${user.mobile}</td>
-                        <td>${user.couponCode}</td>
+                        <td>${prize.name}</td>
+                        <td>${prize.count}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deletePrize(${index})">Delete</button>
+                        </td>
                     </tr>
                 `;
             });
+        }
+
+        function deletePrize(index) {
+            if (confirm("Are you sure you want to delete this prize?")) {
+                prizes.splice(index, 1);
+                localStorage.setItem('manapallePrizes', JSON.stringify(prizes));
+                renderPrizes();
+            }
         }
 
         function startLuckyDraw() {
@@ -107,65 +106,39 @@
                 return;
             }
 
+            if (prizes.length === 0) {
+                alert("Please add prizes before starting the draw.");
+                return;
+            }
+
             let shuffled = [...users].sort(() => 0.5 - Math.random());
-            let winners = shuffled.slice(0, 5);  // 5 Random winners
-
-            // Save the winners
-            winnerLists.push(winners);
-            localStorage.setItem('manapalleWinnerLists', JSON.stringify(winnerLists));
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-
-            renderWinnerLists();
-        }
-
-        function renderWinnerLists() {
-            const container = document.getElementById('winnerListsContainer');
-            container.innerHTML = '';
-            winnerLists.forEach((winners, index) => {
-                const listId = `list${index + 1}`;
-                container.innerHTML += `
-                    <h4>Winner List ${index + 1}</h4>
-                    <button class="btn-custom" onclick="exportCSV(${index})">Export CSV</button>
-                    <button class="btn-custom" onclick="exportPDF(${index})">Export PDF</button>
-                    <ul id="${listId}">
-                        ${winners.map(w => `<li>${w.couponCode} - ${w.name}</li>`).join('')}
-                    </ul>
-                    <hr>
-                `;
-            });
-            document.getElementById('allWinnerLists').classList.remove('hidden');
-        }
-
-        function exportCSV(index) {
-            let csvContent = "Name,Mobile,Coupon Code\n";
-            winnerLists[index].forEach(user => {
-                csvContent += `${user.name},${user.mobile},${user.couponCode}\n`;
+            let winners = [];
+            prizes.forEach(prize => {
+                for (let i = 0; i < prize.count && shuffled.length > 0; i++) {
+                    winners.push({ couponNumber: shuffled.pop().couponCode, prize: prize.name });
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Winner_List_${index + 1}.csv`;
-            link.click();
+            renderWinners(winners);
         }
 
-        function exportPDF(index) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text(`Manapalle Bazar - Winner List ${index + 1}`, 10, 10);
-
-            let y = 20;
-            winnerLists[index].forEach((user, i) => {
-                doc.text(`${i + 1}. Name: ${user.name}, Mobile: ${user.mobile}, Coupon: ${user.couponCode}`, 10, y);
-                y += 10;
+        function renderWinners(winners) {
+            const winnerList = document.getElementById('winnerList');
+            winnerList.classList.remove('hidden');
+            const tbody = document.querySelector('#winnersTable tbody');
+            tbody.innerHTML = '';
+            winners.forEach(w => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${w.couponNumber}</td>
+                        <td>${w.prize}</td>
+                    </tr>`;
             });
-
-            doc.save(`Winner_List_${index + 1}.pdf`);
         }
 
         // Initial render on page load
-        renderUserList();
-        renderWinnerLists();
+        renderPrizes();
         updateTotalCoupons();
     </script>
 </body>
