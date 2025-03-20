@@ -20,6 +20,12 @@
 <body>
     <h1>Manapalle Bazar - Lucky Draw</h1>
 
+    <!-- User Count -->
+    <div class="text-center mb-3">
+        <h3>Total Users: <span id="totalUsers">0</span></h3>
+        <h3>Current Draw: <span id="currentDraw">0</span></h3>
+    </div>
+
     <!-- User Registration Form -->
     <div id="userRegistration">
         <h3>User Registration</h3>
@@ -38,43 +44,25 @@
     <!-- Admin Panel -->
     <div id="adminPanel" class="hidden">
         <h2>Admin Panel</h2>
-        <button class="btn-custom" onclick="showSection('userList')">User List</button>
-        <button class="btn-custom" onclick="showSection('prizeList')">Prize Management</button>
         <button class="btn-custom" onclick="startLuckyDraw()">Start Lucky Draw</button>
         <button class="btn-custom" onclick="exportWinners()">Export CSV</button>
         <button class="btn-custom" onclick="exportPDF()">Export PDF</button>
         <button class="btn-custom" onclick="logout()">Logout</button>
 
-        <!-- User List (Admin) -->
-        <div id="userList" class="hidden">
-            <h3>Registered Users</h3>
-            <table id="userTable" class="table table-bordered">
-                <thead>
-                    <tr><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- Prize Management -->
-        <div id="prizeList" class="hidden">
-            <h3>Prize Management</h3>
-            <input type="text" id="prizeName" placeholder="Prize Name" class="form-control mb-2">
-            <input type="number" id="prizeCount" placeholder="Winners Count" class="form-control mb-2">
-            <button class="btn-custom" onclick="addPrize()">Add Prize</button>
-            <table id="prizeTable" class="table table-bordered mt-3">
-                <thead>
-                    <tr><th>Prize</th><th>Winners</th><th>Actions</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+        <!-- User List -->
+        <h3>Registered Users</h3>
+        <table id="userTable" class="table table-bordered">
+            <thead>
+                <tr><th>Name</th><th>Coupon Code</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
-        let prizes = JSON.parse(localStorage.getItem('manapallePrizes')) || [];
         let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
+        let currentDraw = Math.floor(users.length / 100) + 1;
 
         function checkAdmin() {
             const password = document.getElementById('adminPassword').value;
@@ -82,7 +70,6 @@
                 document.getElementById('adminLogin').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 renderUsers();
-                renderPrizes();
             } else {
                 alert("Incorrect Password!");
             }
@@ -93,11 +80,6 @@
             document.getElementById('adminLogin').classList.remove('hidden');
         }
 
-        function showSection(sectionId) {
-            document.querySelectorAll('#adminPanel > div').forEach(div => div.classList.add('hidden'));
-            document.getElementById(sectionId).classList.remove('hidden');
-        }
-
         function registerUser() {
             const name = document.getElementById('userName').value;
             const mobile = document.getElementById('userMobile').value;
@@ -106,43 +88,32 @@
             localStorage.setItem('manapalleUsers', JSON.stringify(users));
             alert(`User Registered! Coupon: ${couponCode}`);
             renderUsers();
+
+            // Auto draw after 100 participants
+            if (users.length % 100 === 0) {
+                startLuckyDraw();
+            }
         }
 
         function renderUsers() {
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('currentDraw').textContent = currentDraw;
             const userTable = document.querySelector('#userTable tbody');
             userTable.innerHTML = '';
             users.forEach(user => {
-                userTable.innerHTML += `<tr><td>${user.name}</td><td>${user.mobile}</td><td>${user.couponCode}</td></tr>`;
-            });
-        }
-
-        function addPrize() {
-            const name = document.getElementById('prizeName').value;
-            const count = parseInt(document.getElementById('prizeCount').value);
-            prizes.push({ name, count });
-            localStorage.setItem('manapallePrizes', JSON.stringify(prizes));
-            renderPrizes();
-        }
-
-        function renderPrizes() {
-            const tbody = document.querySelector('#prizeTable tbody');
-            tbody.innerHTML = '';
-            prizes.forEach(prize => {
-                tbody.innerHTML += `<tr><td>${prize.name}</td><td>${prize.count}</td><td><button class="btn btn-danger btn-sm" onclick="deletePrize(${prize.name})">Delete</button></td></tr>`;
+                userTable.innerHTML += `<tr><td>${user.name}</td><td>${user.couponCode}</td></tr>`;
             });
         }
 
         function startLuckyDraw() {
-            if (users.length < 100) return alert("Minimum 100 participants required!");
+            if (users.length < 100) return alert("Minimum 100 participants required for a draw!");
 
             winners = [];
-            prizes.forEach(prize => {
-                for (let i = 0; i < prize.count && users.length > 0; i++) {
-                    const winner = users[Math.floor(Math.random() * users.length)];
-                    winners.push({ ...winner, prize: prize.name });
-                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                }
-            });
+            for (let i = 0; i < 10; i++) {
+                const winner = users[Math.floor(Math.random() * users.length)];
+                winners.push(winner);
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
 
             localStorage.setItem('manapalleWinners', JSON.stringify(winners));
             alert("Lucky Draw Completed!");
@@ -154,14 +125,28 @@
             doc.text("Manapalle Bazar - Winner List", 10, 10);
 
             winners.forEach((winner, index) => {
-                doc.text(`${index + 1}. ${winner.name} - ${winner.couponCode} - ${winner.prize}`, 10, 20 + index * 10);
+                doc.text(`${index + 1}. ${winner.name} - ${winner.couponCode}`, 10, 20 + index * 10);
             });
 
             doc.save("winners.pdf");
         }
 
+        function exportWinners() {
+            let csv = "Name,Coupon Code\n";
+            winners.forEach(winner => csv += `${winner.name},${winner.couponCode}\n`);
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = "winners.csv";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
         renderUsers();
-        renderPrizes();
     </script>
 </body>
 </html>
