@@ -181,25 +181,7 @@
     }
 
 
-     // Update Lucky Draw section
-function updateLuckyDrawInfo() {
-    document.getElementById('totalUsers').innerText = users.length;
-    document.getElementById('totalPrizes').innerText = rewards.length;
-}
-
-// Start Draw
-function startDraw() {
-    if (users.length === 0) {
-        alert('No users registered!');
-        return;
-    }
-    if (rewards.length === 0) {
-        alert('No prizes available!');
-        return;
-    }
-    showSection('winnerList');
-    alert('Lucky Draw Started!');
-}
+  
 
 // Call the function to update numbers when the app loads
 window.onload = () => {
