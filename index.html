@@ -7,6 +7,7 @@
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
     <style>
         body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         h1 { color: #FFD700; margin-bottom: 20px; }
@@ -24,6 +25,7 @@
         <button class="btn-custom" onclick="showSection('registrationForm')">Register</button>
         <button class="btn-custom" onclick="showSection('userList')">User List</button>
         <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
+        <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
         <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
     </div>
 
@@ -39,24 +41,12 @@
     <div id="userList" class="hidden">
         <h2>Registered Users</h2>
         <input type="text" id="userSearch" placeholder="Search by Name or Coupon Code" class="form-control mb-2" onkeyup="renderUserList()">
-        <button class="btn-custom mb-2" onclick="exportToExcel('userTableBody', 'User_List')">Export to Excel</button>
-        <table class="table">
+        <button class="btn-custom mb-2" onclick="exportToExcel('userTable', 'User_List')">Export to Excel</button>
+        <table class="table" id="userTable">
             <thead>
                 <tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr>
             </thead>
             <tbody id="userTableBody"></tbody>
-        </table>
-    </div>
-
-    <!-- Winners List -->
-    <div id="winnerList" class="hidden">
-        <h2>Winners</h2>
-        <button class="btn-custom mb-2" onclick="exportToExcel('winnersTableBody', 'Winners_List')">Export to Excel</button>
-        <table class="table">
-            <thead>
-                <tr><th>S. No.</th><th>Name</th><th>Coupon Code</th><th>Reward</th></tr>
-            </thead>
-            <tbody id="winnersTableBody"></tbody>
         </table>
     </div>
 
@@ -71,6 +61,18 @@
         </table>
     </div>
 
+    <!-- Winners List -->
+    <div id="winnerList" class="hidden">
+        <h2>Winners</h2>
+        <button class="btn-custom mb-2" onclick="exportToExcel('winnersTable', 'Winners_List')">Export to Excel</button>
+        <table class="table" id="winnersTable">
+            <thead>
+                <tr><th>S. No.</th><th>Name</th><th>Coupon Code</th><th>Reward</th></tr>
+            </thead>
+            <tbody id="winnersTableBody"></tbody>
+        </table>
+    </div>
+
     <!-- Admin Panel -->
     <div id="adminPanel" class="hidden">
         <h2>Admin Panel</h2>
@@ -81,32 +83,20 @@
             <h3>Manage Rewards</h3>
             <input type="text" id="rewardInput" placeholder="Enter Reward" class="form-control mb-2">
             <button class="btn-custom" onclick="addReward()">Add Reward</button>
-
             <h3>Start Lucky Draw</h3>
             <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
-            <h3>Winners</h3>
-            <ul id="winnersList"></ul>
-            
-            <table class="table">
-                <thead>
-                    <tr><th>S. No.</th><th>Reward</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="adminRewardTableBody"></tbody>
-            </table>
-
-            
         </div>
     </div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
-        let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
         let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
+        let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
 
         function registerUser() {
             const name = document.getElementById('userName').value.trim();
             const mobile = document.getElementById('userMobile').value.trim();
-            if (!name || mobile.length !== 10) {
+            if (!name || !/^\d{10}$/.test(mobile)) {
                 alert('Enter a valid name and 10-digit mobile number.');
                 return;
             }
@@ -119,21 +109,34 @@
         }
 
         function renderUserList() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = users.map((u, i) =>
-                `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`
-            ).join('');
+            tbody.innerHTML = users
+                .filter(u => u.name.toLowerCase().includes(search) || u.couponCode.toLowerCase().includes(search))
+                .map((u, i) => `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`)
+                .join('');
         }
 
-        function validateAdmin() {
-            const password = document.getElementById('adminPassword').value;
-            if (password === '1234') {
-                document.getElementById('adminActions').classList.remove('hidden');
-                renderAdminRewards();
-                renderWinners();
-            } else {
-                alert('Wrong password!');
+        function drawWinner() {
+            if (users.length === 0 || rewards.length === 0) {
+                alert('No participants or rewards!');
+                return;
             }
+            const winner = users[Math.floor(Math.random() * users.length)];
+            const reward = rewards.shift();
+            winners.push({ name: winner.name, couponCode: winner.couponCode, reward });
+            localStorage.setItem('manapalleWinners', JSON.stringify(winners));
+            localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
+            alert(`Winner: ${winner.name} - ${winner.couponCode} - Reward: ${reward}`);
+            confetti();
+            renderWinners();
+        }
+
+        function renderWinners() {
+            const tbody = document.getElementById('winnersTableBody');
+            tbody.innerHTML = winners.map((w, i) =>
+                `<tr><td>${i + 1}</td><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`
+            ).join('');
         }
 
         function addReward() {
@@ -141,126 +144,37 @@
             if (reward) {
                 rewards.push(reward);
                 localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
+                alert('Reward added!');
                 document.getElementById('rewardInput').value = '';
-                renderAdminRewards();
-                renderRewardList();
             } else {
                 alert('Enter a reward!');
             }
         }
 
-        function deleteReward(index) {
-            rewards.splice(index, 1);
-            localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
-            renderAdminRewards();
-            renderRewardList();
+        function exportToExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const workbook = XLSX.utils.table_to_book(table);
+            XLSX.writeFile(workbook, `${filename}.xlsx`);
         }
 
-        function renderAdminRewards() {
-            const tbody = document.getElementById('adminRewardTableBody');
-            tbody.innerHTML = rewards.map((r, i) =>
-                `<tr><td>${i + 1}</td><td>${r}</td><td><button class="btn btn-danger btn-sm" onclick="deleteReward(${i})">Delete</button></td></tr>`
-            ).join('');
-        }
-
-        function renderRewardList() {
-            const tbody = document.getElementById('rewardTableBody');
-            tbody.innerHTML = rewards.map((r, i) => `<tr><td>${i + 1}</td><td>${r}</td></tr>`).join('');
-        }
-
-        function drawWinner() {
-            if (users.length === 0) {
-                alert('No participants!');
-                return;
+        function validateAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === '1234') {
+                document.getElementById('adminActions').classList.remove('hidden');
+            } else {
+                alert('Wrong password!');
             }
-            const winner = users[Math.floor(Math.random() * users.length)];
-            winners.push(winner);
-            localStorage.setItem('manapalleWinners', JSON.stringify(winners));
-            alert(`Winner: ${winner.name} - ${winner.couponCode}`);
-            confetti();
-            renderWinners();
-        }
-
-        function renderWinners() {
-            document.getElementById('winnersList').innerHTML = winners.map(w => `<li>${w.name} - ${w.couponCode}</li>`).join('');
         }
 
         function showSection(sectionId) {
-            ['registrationForm', 'userList', 'rewardList', 'adminPanel'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['registrationForm', 'userList', 'rewardList', 'winnerList', 'adminPanel'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(sectionId).classList.remove('hidden');
-            if (sectionId === 'userList') renderUserList();
-            if (sectionId === 'rewardList') renderRewardList();
+            renderUserList();
+            renderWinners();
         }
 
         renderUserList();
-        renderRewardList();
         renderWinners();
-        let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
-let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
-let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
-
-function registerUser() {
-    const name = document.getElementById('userName').value.trim();
-    const mobile = document.getElementById('userMobile').value.trim();
-    if (!name || mobile.length !== 10) {
-        alert('Enter a valid name and 10-digit mobile number.');
-        return;
-    }
-    const couponCode = `MPB-${Math.floor(10000 + Math.random() * 90000)}`;
-    users.push({ name, mobile, couponCode });
-    localStorage.setItem('manapalleUsers', JSON.stringify(users));
-    alert(`Registered! Coupon Code: ${couponCode}`);
-    renderUserList();
-    showSection('userList');
-}
-
-function renderUserList() {
-    const search = document.getElementById('userSearch').value.toLowerCase();
-    const tbody = document.getElementById('userTableBody');
-    tbody.innerHTML = users
-        .filter(u => u.name.toLowerCase().includes(search) || u.couponCode.toLowerCase().includes(search))
-        .map((u, i) => `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`)
-        .join('');
-}
-
-function drawWinner() {
-    if (users.length === 0 || rewards.length === 0) {
-        alert('No participants or rewards!');
-        return;
-    }
-    const winner = users[Math.floor(Math.random() * users.length)];
-    const reward = rewards.shift();
-    winners.push({ name: winner.name, couponCode: winner.couponCode, reward });
-    localStorage.setItem('manapalleWinners', JSON.stringify(winners));
-    localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
-    alert(`Winner: ${winner.name} - ${winner.couponCode} - Reward: ${reward}`);
-    confetti();
-    renderWinners();
-}
-
-function renderWinners() {
-    const tbody = document.getElementById('winnersTableBody');
-    tbody.innerHTML = winners.map((w, i) =>
-        `<tr><td>${i + 1}</td><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`
-    ).join('');
-}
-
-function exportToExcel(tableId, filename) {
-    const table = document.getElementById(tableId);
-    const workbook = XLSX.utils.table_to_book(table);
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
-}
-
-function showSection(sectionId) {
-    ['registrationForm', 'userList', 'rewardList', 'adminPanel', 'winnerList'].forEach(id => document.getElementById(id).classList.add('hidden'));
-    document.getElementById(sectionId).classList.remove('hidden');
-    if (sectionId === 'userList') renderUserList();
-    if (sectionId === 'winnerList') renderWinners();
-}
-
-renderUserList();
-renderWinners();
-
     </script>
 </body>
 </html>
