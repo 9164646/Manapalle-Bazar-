@@ -10,39 +10,55 @@
 </head>
 <body style="background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
 
-<h1 class="text-center" style="color: #FFD700;">Manapalle Bazar - Lucky Draw</h1>
+<h1 class="text-center mb-4" style="color: #FFD700; text-shadow: 2px 2px 10px #FFD700;">Manapalle Bazar - Lucky Draw</h1>
 
+<!-- Navigation -->
 <div id="navigation" class="text-center mb-4">
     <button class="btn btn-warning m-2" onclick="window.location.href='?admin=true'">Admin</button>
     <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
-    <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
-    <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
-   
     <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
-    
     <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
-
-
-
-
+    <button class="btn btn-danger m-2" onclick="resetData()">Reset Data</button>
 </div>
-    <style>
+
+<style>
     .hidden {
         display: none;
     }
+    .btn-warning {
+        transition: 0.2s;
+    }
+    .btn-warning:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px #FFD700;
+    }
+    .winner-highlight {
+        color: #FFD700;
+        font-size: 24px;
+        text-shadow: 0 0 20px #FFD700;
+        animation: glow 1.5s infinite;
+    }
+    @keyframes glow {
+        0% { text-shadow: 0 0 5px #FFD700; }
+        50% { text-shadow: 0 0 20px #FFD700; }
+        100% { text-shadow: 0 0 5px #FFD700; }
+    }
 </style>
 
+<!-- Winner Announcement -->
+<div id="winnerSection" class="text-center hidden">
+    <h2>Latest Winner</h2>
+    <div id="winnerDisplay" class="winner-highlight"></div>
+</div>
 
 <!-- User List -->
 <div id="userList" class="hidden">
     <h2>Registered Users</h2>
-    <button class="btn btn-success mb-2" onclick="exportToCSV('users')">Export Users</button>
-    <table class="table table-dark">
-        <thead><tr><th>S. No</th><th>Name</th><th>Coupon Code</th></tr></thead>
-<tbody id="userTableBody"></tbody>
+    <table class="table table-dark table-hover">
+        <thead><tr><th>S. No</th><th>Name</th><th>Coupon Code</th><th>Action</th></tr></thead>
+        <tbody id="userTableBody"></tbody>
     </table>
 </div>
-
 
 <!-- Add User Section -->
 <div id="addUserSection" class="hidden">
@@ -50,6 +66,13 @@
     <input type="text" id="userName" placeholder="User Name" class="form-control mb-2">
     <input type="text" id="userMobile" placeholder="Mobile Number" class="form-control mb-2">
     <button class="btn btn-warning" onclick="addUser()">Add User</button>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="liveToast" class="toast text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
 </div>
 
 <!-- Reward List -->
@@ -106,7 +129,7 @@
     ];
     let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
-    let lotNumber = JSON.parse(localStorage.getItem('lotNumber')) || 1;
+    let listNumber = JSON.parse(localStorage.getItem('listtNumber')) || 1;
 
 
     if (isAdmin) document.getElementById('adminLogin').classList.remove('hidden');
@@ -127,55 +150,84 @@
         window.location.href = window.location.pathname;
     }
 
+   
+
+    function showToast(message) {
+        const toast = document.getElementById('liveToast');
+        document.getElementById('toastMessage').innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
     function showSection(section) {
-    // Hide all sections
-    const sections = ['userList', 'rewardList', 'winnerList', 'addUserSection', 'adminLogin'];
-    sections.forEach(sec => {
-        document.getElementById(sec).classList.add('hidden');
-    });
+        const sections = ['userList', 'addUserSection', 'winnerSection'];
+        sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
+        document.getElementById(section).classList.remove('hidden');
+        renderData();
+    }
 
-    // Show the selected section
-    document.getElementById(section).classList.remove('hidden');
+    function confetti() {
+        window.confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
     
-    // Refresh data
-    renderData();
-}
-
   function addUser() {
-    const name = document.getElementById('userName').value.trim();
-    const mobile = document.getElementById('userMobile').value.trim();
-
-    if (name === '' || mobile === '') {
-        alert('Please fill in all fields!');
-        return;
-    }
-    if (!/^\d{10}$/.test(mobile)) {
-        alert('Please enter a valid 10-digit mobile number!');
-        return;
-    }
-    const newCoupon = 'MPB-' + String(users.length + 1001);
-    users.push({ name, mobile, coupon: newCoupon });
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // Clear input fields and refresh user list
-    document.getElementById('userName').value = '';
-    document.getElementById('userMobile').value = '';
-
-    alert(`User added! Coupon Code: ${newCoupon}`);
-    confetti();
-    renderData();
+        const name = document.getElementById('userName').value.trim();
+        const mobile = document.getElementById('userMobile').value.trim();
+        if (name === '' || mobile === '') {
+            showToast('Please fill in all fields!');
+            return;
+        }
+        if (!/^\d{10}$/.test(mobile)) {
+            showToast('Please enter a valid 10-digit mobile number!');
+            return;
+        }
+        const newCoupon = 'MPB-' + String(users.length + 1001);
+        users.push({ name, mobile, coupon: newCoupon });
+        localStorage.setItem('users', JSON.stringify(users));
+        document.getElementById('userName').value = '';
+        document.getElementById('userMobile').value = '';
+        showToast(`User added! Coupon Code: ${newCoupon}`);
+        confetti();
+        renderData();
   }
-      function confetti() {
-    window.confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
-}
+      
+    function deleteUser(index) {
+        if (confirm(`Are you sure you want to delete ${users[index].name}?`)) {
+            users.splice(index, 1);
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('User deleted!');
+            renderData();
+        }
+    }
 
+    function resetData() {
+        if (confirm('Are you sure you want to reset all data?')) {
+            localStorage.clear();
+            users = [{ name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' }];
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('All data reset!');
+            renderData();
+        }
+    }
 
+    function renderData() {
+        const userTableBody = document.getElementById('userTableBody');
+        userTableBody.innerHTML = '';
+        users.forEach((user, index) => {
+            userTableBody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${user.name}</td>
+                    <td>${user.coupon}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
+                </tr>
+            `;
+        });
+    }
 
-    
+    renderData();
 
     function addReward() {
         const prize = document.getElementById('rewardPrize').value.trim();
@@ -200,14 +252,7 @@
         link.click();
     }
 
-    
-function renderData() {
-    // Populate User List
-    const userTableBody = document.getElementById('userTableBody');
-    userTableBody.innerHTML = '';
-    users.forEach((user, index) => {
-    userTableBody.innerHTML += `<tr><td>${index + 1}</td><td>${user.name}</td><td>${user.coupon}</td></tr>`;
-});
+  
 
 
     // Populate Reward List
@@ -217,17 +262,17 @@ function renderData() {
         rewardTableBody.innerHTML += `<tr><td>${index + 1}</td><td>${reward.prize}</td><td>${reward.gift}</td></tr>`;
     });
 
-    // Group winners by lot number
+    // Group winners by list number
 const winnerListSection = document.getElementById('winnerList');
 winnerListSection.innerHTML = '<h2>Winners</h2><button class="btn btn-success mb-2" onclick="exportToCSV(\'winners\')">Export Winners</button>';
 
 const groupedWinners = winners.reduce((acc, winner) => {
-    if (!acc[winner.lot]) acc[winner.lot] = [];
-    acc[winner.lot].push(winner);
+    if (!acc[winner.listt]) acc[winner.list] = [];
+    acc[winner.list].push(winner);
     return acc;
 }, {});
 
-// Create a separate table for each lot
+// Create a separate table for each list
 Object.keys(groupedWinners).forEach(list => {
     winnerListSection.innerHTML += `
         <h3>List ${list}</h3>
@@ -284,31 +329,65 @@ function drawWinner() {
     updateLuckyDrawInfo();
 }
 
-function startDraw() {
-    if (users.length === 0) {
-        alert('No users registered!');
-        return;
+function drawWinner() {
+        if (users.length === 0) {
+            showToast('No users to draw from!');
+            return;
+        }
+        let winnerIndex = Math.floor(Math.random() * users.length);
+        let winner = users[winnerIndex];
+
+        showSection('winnerSection');
+        const winnerDisplay = document.getElementById('winnerDisplay');
+        winnerDisplay.innerHTML = "Drawing...";
+        let counter = 10;
+        let drawAnimation = setInterval(() => {
+            winnerDisplay.innerText = users[Math.floor(Math.random() * users.length)].name;
+            counter--;
+            if (counter <= 0) {
+                clearInterval(drawAnimation);
+                winnerDisplay.innerHTML = `${winner.name} (Coupon: ${winner.coupon})`;
+                showToast(`${winner.name} is the winner!`);
+                confetti();
+            }
+        }, 100);
     }
-    if (rewards.length === 0) {
-        alert('No prizes available!');
-        return;
+
+    function deleteUser(index) {
+        if (confirm(`Are you sure you want to delete ${users[index].name}?`)) {
+            users.splice(index, 1);
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('User deleted!');
+            renderData();
+        }
     }
-    
-    listNumber++;
-    localStorage.setItem('listNumber', listNumber);
-    alert(`Lucky Draw Started! Lot ${listNumber}`);
-    showSection('winnerList');
-}
 
-// Update lucky draw info
-function updateLuckyDrawInfo() {
-    document.getElementById('totalUsers').textContent = users.length;
-    document.getElementById('totalPrizes').textContent = rewards.length;
-}
+    function resetData() {
+        if (confirm('Are you sure you want to reset all data?')) {
+            localStorage.clear();
+            users = [{ name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' }];
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('All data reset!');
+            renderData();
+        }
+    }
 
-// Call updateLuckyDrawInfo when the app loads
-updateLuckyDrawInfo();
+    function renderData() {
+        const userTableBody = document.getElementById('userTableBody');
+        userTableBody.innerHTML = '';
+        users.forEach((user, index) => {
+            userTableBody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${user.name}</td>
+                    <td>${user.coupon}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
+                </tr>
+            `;
+        });
+    }
 
+    renderData();
 
 
 
