@@ -77,11 +77,13 @@
         <tbody id="winnersTableBody"></tbody>
     </table>
 
-    <div id="drawActions" class="hidden">
-        <h3>Lucky Draw</h3>
-        <input type="number" id="listNumber" placeholder="List No." class="form-control mb-2">
-        <button class="btn btn-warning" onclick="drawWinner()">Draw Winner</button>
-    </div>
+</div>
+<!-- Lucky Draw Section -->
+<div id="luckyDrawSection" class="text-center mb-4">
+    <h2>Lucky Draw</h2>
+    <p><strong>Total Users:</strong> <span id="totalUsers">0</span></p>
+    <p><strong>Total Prizes:</strong> <span id="totalPrizes">0</span></p>
+    <button class="btn btn-warning" onclick="startDraw()">Start Draw</button>
 </div>
 
 <!-- Admin Login -->
@@ -175,20 +177,32 @@
     }
 
 
-    function drawWinner() {
-        const lot = document.getElementById('lotNumber').value;
-        if (winners.some(w => w.lot === lot)) {
-            alert('Lot number already used!');
-            return;
-        }
-        const winner = users[Math.floor(Math.random() * users.length)];
-        const prize = rewards.shift();
-        winners.push({ lot, name: winner.name, coupon: winner.coupon, prize: prize.prize });
-        localStorage.setItem('winners', JSON.stringify(winners));
-        localStorage.setItem('rewards', JSON.stringify(rewards));
-        confetti();
-        renderData();
+     // Update Lucky Draw section
+function updateLuckyDrawInfo() {
+    document.getElementById('totalUsers').innerText = users.length;
+    document.getElementById('totalPrizes').innerText = rewards.length;
+}
+
+// Start Draw
+function startDraw() {
+    if (users.length === 0) {
+        alert('No users registered!');
+        return;
     }
+    if (rewards.length === 0) {
+        alert('No prizes available!');
+        return;
+    }
+    showSection('winnerList');
+    alert('Lucky Draw Started!');
+}
+
+// Call the function to update numbers when the app loads
+window.onload = () => {
+    renderData();
+    updateLuckyDrawInfo();
+};
+
 
     function exportToCSV(type) {
         let data = type === 'users' ? users : winners;
