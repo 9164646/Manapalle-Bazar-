@@ -166,7 +166,16 @@
     alert(`User added! Coupon Code: ${newCoupon}`);
     confetti();
     renderData();
+  }
+      function confetti() {
+    window.confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
 }
+
+
 
     
 
@@ -254,6 +263,10 @@ Object.keys(groupedWinners).forEach(list => {
         alert('No prizes available!');
         return;
     }
+        users.splice(winnerIndex, 1);
+localStorage.setItem('users', JSON.stringify(users));
+
+
 
     const winnerIndex = Math.floor(Math.random() * users.length);
     const reward = rewards.pop();
@@ -274,6 +287,14 @@ Object.keys(groupedWinners).forEach(list => {
     confetti();
     renderData();
     updateLuckyDrawInfo();
+}
+    
+function confetti() {
+    window.confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
 }
 
 
