@@ -263,26 +263,21 @@ Object.keys(groupedWinners).forEach(list => {
         alert('No prizes available!');
         return;
     }
-        
-
 
     const winnerIndex = Math.floor(Math.random() * users.length);
-const reward = rewards.pop();
-const winner = users[winnerIndex];
+    const reward = rewards.pop();
+    const winner = users[winnerIndex];
 
-winners.push({
-    list: listNumber,
-    name: winner.name,
-    coupon: winner.coupon,
-    prize: reward.prize
-});
+    winners.push({
+        lot: lotNumber,
+        name: winner.name,
+        coupon: winner.coupon,
+        prize: reward.prize
+    });
 
-// Remove winner from users after adding to winners
-users.splice(winnerIndex, 1);
-localStorage.setItem('users', JSON.stringify(users));
-        
-
-document.getElementById('luckyDrawSection').classList.remove('hidden');
+    // Remove winner from users after adding to winners
+    users.splice(winnerIndex, 1);
+    localStorage.setItem('users', JSON.stringify(users));
 
     // Save updated data
     localStorage.setItem('winners', JSON.stringify(winners));
@@ -292,20 +287,8 @@ document.getElementById('luckyDrawSection').classList.remove('hidden');
     confetti();
     renderData();
     updateLuckyDrawInfo();
-        users.splice(winnerIndex, 1);
-localStorage.setItem('users', JSON.stringify(users));
-}
-    
-function confetti() {
-    window.confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
 }
 
-
-// Increment lot after each draw
 function startDraw() {
     if (users.length === 0) {
         alert('No users registered!');
@@ -316,11 +299,12 @@ function startDraw() {
         return;
     }
     
-    listNumber++;
-    localStorage.setItem('lotNumber', listtNumber);
+    lotNumber++;
+    localStorage.setItem('lotNumber', lotNumber);
     showSection('winnerList');
-    alert(`Lucky Draw Started! Lot ${listNumber}`);
+    alert(`Lucky Draw Started! Lot ${lotNumber}`);
 }
+
 
 
 </script>
