@@ -13,11 +13,15 @@
 <h1 class="text-center" style="color: #FFD700;">Manapalle Bazar - Lucky Draw</h1>
 
 <div id="navigation" class="text-center mb-4">
+    <button class="btn btn-warning m-2" onclick="window.location.href='?admin=true'">Admin</button>
     <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
     <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
     <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
-    <button class="btn btn-warning m-2" onclick="window.location.href='?admin=true'">Admin</button>
+   
     <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
+    <button class="btn btn-warning" onclick="drawWinner()">Draw Winner</button>     
+
+
 
 </div>
     <style>
@@ -75,7 +79,7 @@
 
     <div id="drawActions" class="hidden">
         <h3>Lucky Draw</h3>
-        <input type="number" id="lotNumber" placeholder="Lot No." class="form-control mb-2">
+        <input type="number" id="listNumber" placeholder="List No." class="form-control mb-2">
         <button class="btn btn-warning" onclick="drawWinner()">Draw Winner</button>
     </div>
 </div>
