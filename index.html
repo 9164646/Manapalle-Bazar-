@@ -40,7 +40,6 @@
     <!-- User List -->
     <div id="userList" class="hidden">
         <h2>Registered Users</h2>
-        <input type="text" id="userSearch" placeholder="Search by Name or Coupon Code" class="form-control mb-2" onkeyup="renderUserList()">
         <button class="btn-custom mb-2" onclick="exportToExcel('userTable', 'User_List')">Export to Excel</button>
         <table class="table" id="userTable">
             <thead>
@@ -93,8 +92,7 @@
         let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [
             { prize: "1st Prize", reward: 'Smartphone' },
             { prize: "2nd Prize", reward: 'Smartwatch' },
-            { prize: "3rd Prize", reward: 'Gift Card $50' },
-            { prize: "Consolation Prize", reward: 'Bluetooth Headphones' }
+            { prize: "3rd Prize", reward: 'Gift Card $50' }
         ];
 
         function registerUser() {
@@ -110,20 +108,6 @@
             alert(`Registered! Coupon Code: ${couponCode}`);
             renderUserList();
             showSection('userList');
-        }
-
-        function renderUserList() {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = users.map((u, i) =>
-                `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`
-            ).join('');
-        }
-
-        function renderRewardList() {
-            const tbody = document.getElementById('rewardTableBody');
-            tbody.innerHTML = rewards.map(r =>
-                `<tr><td>${r.prize}</td><td>${r.reward}</td></tr>`
-            ).join('');
         }
 
         function drawWinner() {
@@ -142,9 +126,20 @@
             renderWinners();
         }
 
+        function renderUserList() {
+            document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
+                `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td></tr>`
+            ).join('');
+        }
+
+        function renderRewardList() {
+            document.getElementById('rewardTableBody').innerHTML = rewards.map(r =>
+                `<tr><td>${r.prize}</td><td>${r.reward}</td></tr>`
+            ).join('');
+        }
+
         function renderWinners() {
-            const tbody = document.getElementById('winnersTableBody');
-            tbody.innerHTML = winners.map((w, i) =>
+            document.getElementById('winnersTableBody').innerHTML = winners.map(w =>
                 `<tr><td>${w.prize}</td><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`
             ).join('');
         }
