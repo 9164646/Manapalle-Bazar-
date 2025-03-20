@@ -21,11 +21,10 @@
 <h1>Manapalle Bazar - Lucky Draw</h1>
 
 <!-- Navigation -->
-<div>
+<div id="navigation">
     <button class="btn-custom" onclick="showSection('userList')">User List</button>
     <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
     <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
-    <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
 </div>
 
 <!-- User List -->
@@ -41,45 +40,67 @@
 <div id="rewardList" class="hidden">
     <h2>Rewards</h2>
     <table class="table">
-        <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th></tr></thead>
+        <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th><th id="adminActionsReward" class="hidden">Actions</th></tr></thead>
         <tbody id="rewardTableBody"></tbody>
     </table>
+
+    <div id="adminRewardActions" class="hidden">
+        <h3>Add Reward</h3>
+        <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
+        <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
+        <button class="btn-custom" onclick="addReward()">Add Reward</button>
+    </div>
 </div>
 
 <!-- Winner List -->
 <div id="winnerList" class="hidden">
     <h2>Winners</h2>
     <table class="table">
-        <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th>Action</th></tr></thead>
+        <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th id="adminActionsWinner" class="hidden">Actions</th></tr></thead>
         <tbody id="winnersTableBody"></tbody>
     </table>
-</div>
 
-<!-- Admin Panel -->
-<div id="adminPanel" class="hidden">
-    <h2>Admin Login</h2>
-    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
-    <button class="btn-custom" onclick="validateAdmin()">Login</button>
-
-    <div id="adminActions" class="hidden">
-        <h3>Manage Rewards</h3>
-        <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
-        <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
-        <button class="btn-custom" onclick="addReward()">Add Reward</button>
-
+    <div id="adminWinnerActions" class="hidden">
         <h3>Lucky Draw</h3>
         <input type="number" id="lotNumber" placeholder="Lot No." class="form-control mb-2">
         <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
     </div>
 </div>
 
+<!-- Admin Login -->
+<div id="adminLogin" class="hidden">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
+    <button class="btn-custom" onclick="validateAdmin()">Login</button>
+</div>
+
 <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'true';
+
     let users = JSON.parse(localStorage.getItem('users')) || [
         { name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' },
         { name: 'Jane Doe', mobile: '9876543211', coupon: 'MPB-1002' }
     ];
     let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
+
+    if (isAdmin) {
+        document.getElementById('adminLogin').classList.remove('hidden');
+    }
+
+    function validateAdmin() {
+        if (document.getElementById('adminPassword').value === '1234') {
+            document.getElementById('adminLogin').classList.add('hidden');
+            document.getElementById('adminActionsReward').classList.remove('hidden');
+            document.getElementById('adminActionsWinner').classList.remove('hidden');
+            document.getElementById('adminRewardActions').classList.remove('hidden');
+            document.getElementById('adminWinnerActions').classList.remove('hidden');
+            renderData();
+        } else {
+            alert('Wrong password!');
+        }
+    }
 
     function showSection(section) {
         document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
@@ -88,29 +109,17 @@
     }
 
     function renderData() {
-        // User Table
         document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
             `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.coupon}</td></tr>`
         ).join('');
 
-        // Rewards Table
         document.getElementById('rewardTableBody').innerHTML = rewards.map((r, i) =>
-            `<tr><td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td></tr>`
+            `<tr><td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td>${isAdmin ? `<td><button onclick="deleteReward(${i})" class="btn btn-danger btn-sm">Delete</button></td>` : ''}</tr>`
         ).join('');
 
-        // Winners Table
         document.getElementById('winnersTableBody').innerHTML = winners.map((w, i) =>
-            `<tr><td>${w.lot}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td>
-            <td><button onclick="deleteWinner(${i})" class="btn btn-danger btn-sm">Delete</button></td></tr>`
+            `<tr><td>${w.lot}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td>${isAdmin ? `<td><button onclick="deleteWinner(${i})" class="btn btn-danger btn-sm">Delete</button></td>` : ''}</tr>`
         ).join('');
-    }
-
-    function validateAdmin() {
-        if (document.getElementById('adminPassword').value === '1234') {
-            document.getElementById('adminActions').classList.remove('hidden');
-        } else {
-            alert('Wrong password!');
-        }
     }
 
     function addReward() {
@@ -136,6 +145,12 @@
         localStorage.setItem('winners', JSON.stringify(winners));
         localStorage.setItem('rewards', JSON.stringify(rewards));
         confetti();
+        renderData();
+    }
+
+    function deleteReward(index) {
+        rewards.splice(index, 1);
+        localStorage.setItem('rewards', JSON.stringify(rewards));
         renderData();
     }
 
