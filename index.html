@@ -190,13 +190,7 @@
     }
 
 
-  
 
-// Call the function to update numbers when the app loads
-window.onload = () => {
-    renderData();
-    updateLuckyDrawInfo();
-};
 
 
     function exportToCSV(type) {
@@ -269,7 +263,7 @@ Object.keys(groupedWinners).forEach(list => {
     const winner = users[winnerIndex];
 
     winners.push({
-        lot: lotNumber,
+        lot: listNumber,
         name: winner.name,
         coupon: winner.coupon,
         prize: reward.prize
@@ -277,9 +271,9 @@ Object.keys(groupedWinners).forEach(list => {
 
     // Remove winner from users after adding to winners
     users.splice(winnerIndex, 1);
-    localStorage.setItem('users', JSON.stringify(users));
-
+    
     // Save updated data
+    localStorage.setItem('users', JSON.stringify(users));
     localStorage.setItem('winners', JSON.stringify(winners));
     localStorage.setItem('rewards', JSON.stringify(rewards));
 
@@ -299,10 +293,16 @@ function startDraw() {
         return;
     }
     
-    lotNumber++;
-    localStorage.setItem('lotNumber', lotNumber);
+    listNumber++;
+    localStorage.setItem('listNumber', listNumber);
+    alert(`Lucky Draw Started! Lot ${listNumber}`);
     showSection('winnerList');
-    alert(`Lucky Draw Started! Lot ${lotNumber}`);
+}
+
+// Update lucky draw info
+function updateLuckyDrawInfo() {
+    document.getElementById('totalUsers').textContent = users.length;
+    document.getElementById('totalPrizes').textContent = rewards.length;
 }
 
 
