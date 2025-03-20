@@ -19,7 +19,9 @@
     <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
    
     <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
-    <button class="btn btn-warning" onclick="drawWinner()">Draw Winner</button>     
+    
+    <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
+
 
 
 
@@ -286,11 +288,12 @@ Object.keys(groupedWinners).forEach(list => {
     localStorage.setItem('winners', JSON.stringify(winners));
     localStorage.setItem('rewards', JSON.stringify(rewards));
 
-    alert(`${winner.name} won ${reward.prize}!`);
+    alert(`🎉 ${winner.name} won ${reward.prize}!`);
     confetti();
     renderData();
     updateLuckyDrawInfo();
 }
+
 
 // Increment lot after each draw
 function startDraw() {
