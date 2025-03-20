@@ -16,27 +16,19 @@
 <div id="navigation" class="text-center mb-4">
     <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
     <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
+    <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
     <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
     <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
     <button class="btn btn-danger m-2" onclick="resetData()">Reset Data</button>
-    <button id="logoutBtn" class="btn btn-danger m-2 hidden" onclick="logoutAdmin()">Logout</button>
+    <button class="btn btn-danger m-2" onclick="logoutAdmin()">Logout</button>
 </div>
 
-<style>
-    .hidden { display: none; }
-    .btn-warning { transition: 0.2s; }
-    .btn-warning:hover { transform: scale(1.1); box-shadow: 0 0 15px #FFD700; }
-    .winner-highlight {
-        color: #FFD700;
-        font-size: 24px;
-        text-shadow: 0 0 20px #FFD700;
-        animation: glow 1.5s infinite;
-    }
-    @keyframes glow {
-        0%, 100% { text-shadow: 0 0 5px #FFD700; }
-        50% { text-shadow: 0 0 20px #FFD700; }
-    }
-</style>
+<!-- Admin Login -->
+<div id="adminLogin" class="text-center">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
+    <button class="btn btn-warning" onclick="validateAdmin()">Login</button>
+</div>
 
 <!-- Winner Announcement -->
 <div id="winnerSection" class="text-center hidden">
@@ -47,7 +39,7 @@
 <!-- User List -->
 <div id="userList" class="hidden">
     <h2>Registered Users</h2>
-    <table class="table table-dark table-hover">
+    <table class="table table-dark">
         <thead><tr><th>S. No</th><th>Name</th><th>Coupon Code</th><th>Action</th></tr></thead>
         <tbody id="userTableBody"></tbody>
     </table>
@@ -61,6 +53,19 @@
     <button class="btn btn-warning" onclick="addUser()">Add User</button>
 </div>
 
+<!-- Reward List -->
+<div id="rewardList" class="hidden">
+    <h2>Rewards</h2>
+    <table class="table table-dark">
+        <thead><tr><th>S.No</th><th>Prize</th><th>Gift</th></tr></thead>
+        <tbody id="rewardTableBody"></tbody>
+    </table>
+    <h3>Add Reward</h3>
+    <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
+    <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
+    <button class="btn btn-warning" onclick="addReward()">Add Reward</button>
+</div>
+
 <!-- Winner List -->
 <div id="winnerList" class="hidden">
     <h2>Winners</h2>
@@ -71,107 +76,98 @@
     </table>
 </div>
 
-<!-- Admin Login -->
-<div id="adminLogin" class="text-center">
-    <h2>Admin Login</h2>
-    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
-    <button class="btn btn-warning" onclick="validateAdmin()">Login</button>
-</div>
-
 <script>
-    // Data Handling
     let users = JSON.parse(localStorage.getItem('users')) || [];
+    let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
     let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
-    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
 
     function validateAdmin() {
         const password = document.getElementById('adminPassword').value;
         if (password === '1234') {
             sessionStorage.setItem('isAdmin', 'true');
-            isAdmin = true;
-            document.getElementById('adminLogin').classList.add('hidden');
-            document.getElementById('logoutBtn').classList.remove('hidden');
-            showSection('userList');
-        } else alert('Wrong password!');
+            location.reload();
+        } else {
+            alert('Wrong password!');
+        }
     }
 
     function logoutAdmin() {
         sessionStorage.removeItem('isAdmin');
-        isAdmin = false;
-        window.location.reload();
+        location.reload();
     }
+
+    function checkAdmin() {
+        if (!sessionStorage.getItem('isAdmin')) {
+            document.getElementById('navigation').classList.add('hidden');
+        } else {
+            document.getElementById('adminLogin').classList.add('hidden');
+        }
+    }
+    checkAdmin();
 
     function showSection(section) {
-        ['userList', 'addUserSection', 'winnerList', 'winnerSection'].forEach(sec =>
-            document.getElementById(sec).classList.add('hidden')
-        );
+        const sections = ['userList', 'addUserSection', 'rewardList', 'winnerList', 'winnerSection'];
+        sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
         document.getElementById(section).classList.remove('hidden');
-        renderData();
-    }
-
-    function addUser() {
-        const name = document.getElementById('userName').value.trim();
-        const mobile = document.getElementById('userMobile').value.trim();
-        if (!name || !/^\d{10}$/.test(mobile)) return alert('Invalid Name or Mobile!');
-        const newCoupon = 'MPB-' + String(users.length + 1001);
-        users.push({ name, mobile, coupon: newCoupon });
-        localStorage.setItem('users', JSON.stringify(users));
-        renderData();
-        alert(`User added! Coupon: ${newCoupon}`);
-    }
-
-    function drawWinner() {
-        if (users.length === 0) return alert('No users to draw from!');
-        showSection('winnerSection');
-        const winnerIndex = Math.floor(Math.random() * users.length);
-        const winner = users[winnerIndex];
-        winners.push({ list: listNumber, ...winner });
-        users.splice(winnerIndex, 1);
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('winners', JSON.stringify(winners));
-        localStorage.setItem('listNumber', ++listNumber);
-        confetti();
-        document.getElementById('winnerDisplay').innerText = `${winner.name} (Coupon: ${winner.coupon})`;
-        renderData();
-    }
-
-    function resetData() {
-        if (!confirm('Reset all data?')) return;
-        localStorage.clear();
-        users = [];
-        winners = [];
-        listNumber = 1;
         renderData();
     }
 
     function renderData() {
         const userTableBody = document.getElementById('userTableBody');
-        userTableBody.innerHTML = users.map((u, i) =>
-            `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.coupon}</td></tr>`
-        ).join('');
-
-        const winnersTableBody = document.getElementById('winnersTableBody');
-        winnersTableBody.innerHTML = winners.map((w, i) =>
-            `<tr><td>${w.list}</td><td>${w.name}</td><td>${w.coupon}</td></tr>`
-        ).join('');
+        userTableBody.innerHTML = users.map((user, index) => `
+            <tr><td>${index + 1}</td><td>${user.name}</td><td>${user.coupon}</td></tr>
+        `).join('');
+        
+        const rewardTableBody = document.getElementById('rewardTableBody');
+        rewardTableBody.innerHTML = rewards.map((reward, index) => `
+            <tr><td>${index + 1}</td><td>${reward.prize}</td><td>${reward.gift}</td></tr>
+        `).join('');
     }
 
-    function exportToCSV(type) {
-        const data = type === 'users' ? users : winners;
-        const csv = data.map(row => Object.values(row).join(",")).join("\n");
-        const link = document.createElement('a');
-        link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-        link.download = `${type}.csv`;
-        link.click();
+    function addUser() {
+        const name = document.getElementById('userName').value.trim();
+        const mobile = document.getElementById('userMobile').value.trim();
+        const newCoupon = 'MPB-' + String(users.length + 1001);
+        users.push({ name, mobile, coupon: newCoupon });
+        localStorage.setItem('users', JSON.stringify(users));
+        renderData();
     }
 
-    function confetti() {
-        window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    function addReward() {
+        const prize = document.getElementById('rewardPrize').value.trim();
+        const gift = document.getElementById('rewardGift').value.trim();
+        rewards.push({ prize, gift });
+        localStorage.setItem('rewards', JSON.stringify(rewards));
+        renderData();
     }
 
-    if (isAdmin) showSection('userList');
+    function drawWinner() {
+        if (users.length === 0 || rewards.length === 0) return alert("No users or prizes left!");
+
+        const winnerIndex = Math.floor(Math.random() * users.length);
+        const reward = rewards.pop();
+        const winner = users.splice(winnerIndex, 1)[0];
+
+        winners.push({ list: listNumber, ...winner, prize: reward.prize });
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('rewards', JSON.stringify(rewards));
+        localStorage.setItem('winners', JSON.stringify(winners));
+        alert(`${winner.name} wins ${reward.prize}!`);
+        renderData();
+    }
+
+    function resetData() {
+        if (confirm("Reset all data?")) {
+            users = [];
+            rewards = [];
+            winners = [];
+            localStorage.clear();
+            renderData();
+        }
+    }
+
+    renderData();
 </script>
-
 </body>
 </html>
