@@ -9,76 +9,75 @@
 </head>
 <body style="background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px;">
 
-<h1 class="text-center mb-4" style="color: #FFD700; text-shadow: 2px 2px 10px #FFD700;">Manapalle Bazar - Lucky Draw</h1>
+<div class="container">
+    <h1 class="text-center my-4" style="color: #FFD700; text-shadow: 2px 2px 10px #FFD700;">Manapalle Bazar - Lucky Draw</h1>
 
-<div id="adminLogin" class="text-center">
-    <h2>Admin Login</h2>
-    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
-    <button class="btn btn-warning" onclick="validateAdmin()">Login</button>
-</div>
+    <!-- Admin Login -->
+    <div id="adminLogin" class="text-center">
+        <h2>Admin Login</h2>
+        <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control my-3">
+        <button class="btn btn-warning" onclick="validateAdmin()">Login</button>
+    </div>
 
-<div id="navigation" class="text-center hidden">
-    <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
-    <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
-    <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
-    <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
-    <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
-    <button class="btn btn-danger m-2" onclick="resetData()">Reset Data</button>
-    <button class="btn btn-danger m-2" onclick="logoutAdmin()">Logout</button>
-</div>
+    <!-- Admin Navigation -->
+    <div id="navigation" class="text-center hidden">
+        <button class="btn btn-warning m-2" onclick="showSection('userList')">User List</button>
+        <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
+        <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
+        <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
+        <button class="btn btn-warning m-2" onclick="drawWinner()">Draw Winner</button>
+        <button class="btn btn-danger m-2" onclick="resetData()">Reset Data</button>
+        <button class="btn btn-danger m-2" onclick="logoutAdmin()">Logout</button>
+    </div>
 
-<!-- Sections -->
-<div id="userList" class="hidden">
-    <h2>Registered Users</h2>
-    <table class="table table-dark">
-        <thead><tr><th>S. No</th><th>Name</th><th>Coupon Code</th></tr></thead>
-        <tbody id="userTableBody"></tbody>
-    </table>
-</div>
+    <!-- Sections -->
+    <div id="userList" class="hidden">
+        <h2>Registered Users</h2>
+        <table class="table table-dark">
+            <thead><tr><th>#</th><th>Name</th><th>Coupon Code</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
+    </div>
 
-<div id="addUserSection" class="hidden">
-    <h2>Add User</h2>
-    <input type="text" id="userName" placeholder="User Name" class="form-control mb-2">
-    <input type="text" id="userMobile" placeholder="Mobile Number" class="form-control mb-2">
-    <button class="btn btn-warning" onclick="addUser()">Add User</button>
-</div>
+    <div id="addUserSection" class="hidden">
+        <h2>Add User</h2>
+        <input type="text" id="userName" placeholder="User Name" class="form-control mb-2">
+        <input type="text" id="userMobile" placeholder="Mobile Number" class="form-control mb-2">
+        <button class="btn btn-warning" onclick="addUser()">Add User</button>
+    </div>
 
-<div id="rewardList" class="hidden">
-    <h2>Rewards</h2>
-    <table class="table table-dark">
-        <thead><tr><th>S. No</th><th>Prize</th><th>Gift</th></tr></thead>
-        <tbody id="rewardTableBody"></tbody>
-    </table>
-    <h3>Add Reward</h3>
-    <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
-    <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
-    <button class="btn btn-warning" onclick="addReward()">Add Reward</button>
-</div>
+    <div id="rewardList" class="hidden">
+        <h2>Rewards</h2>
+        <table class="table table-dark">
+            <thead><tr><th>#</th><th>Prize</th></tr></thead>
+            <tbody id="rewardTableBody"></tbody>
+        </table>
+        <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control my-2">
+        <button class="btn btn-warning" onclick="addReward()">Add Reward</button>
+    </div>
 
-<div id="winnerList" class="hidden">
-    <h2>Winners</h2>
-    <table class="table table-dark">
-        <thead><tr><th>List No</th><th>Name</th><th>Coupon Code</th><th>Prize</th></tr></thead>
-        <tbody id="winnersTableBody"></tbody>
-    </table>
+    <div id="winnerList" class="hidden">
+        <h2>Winners</h2>
+        <button class="btn btn-success mb-3" onclick="exportWinners()">Export to CSV</button>
+        <table class="table table-dark">
+            <thead><tr><th>#</th><th>Name</th><th>Coupon</th><th>Prize</th></tr></thead>
+            <tbody id="winnersTableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Data storage
+    // Data handling
     let users = JSON.parse(localStorage.getItem('users')) || [];
     let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
-    let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
 
-    // Admin authentication
+    // Admin auth
     function validateAdmin() {
-        const password = document.getElementById('adminPassword').value;
-        if (password === '1234') {
+        if (document.getElementById('adminPassword').value === '1234') {
             sessionStorage.setItem('isAdmin', 'true');
             location.reload();
-        } else {
-            alert('Wrong password!');
-        }
+        } else alert('Incorrect Password');
     }
 
     function logoutAdmin() {
@@ -90,6 +89,7 @@
         if (sessionStorage.getItem('isAdmin')) {
             document.getElementById('adminLogin').classList.add('hidden');
             document.getElementById('navigation').classList.remove('hidden');
+            renderData();
         }
     }
     checkAdmin();
@@ -103,46 +103,28 @@
         renderData();
     }
 
-    // Render data
-    function renderData() {
-        document.getElementById('userTableBody').innerHTML = users.map((user, index) =>
-            `<tr><td>${index + 1}</td><td>${user.name}</td><td>${user.coupon}</td></tr>`
-        ).join('');
-
-        document.getElementById('rewardTableBody').innerHTML = rewards.map((reward, index) =>
-            `<tr><td>${index + 1}</td><td>${reward.prize}</td><td>${reward.gift}</td></tr>`
-        ).join('');
-
-        document.getElementById('winnersTableBody').innerHTML = winners.map((winner, index) =>
-            `<tr><td>${winner.list}</td><td>${winner.name}</td><td>${winner.coupon}</td><td>${winner.prize}</td></tr>`
-        ).join('');
-    }
-
     // Add user
     function addUser() {
         const name = document.getElementById('userName').value.trim();
         const mobile = document.getElementById('userMobile').value.trim();
         if (name && mobile) {
-            const newCoupon = 'MPB-' + String(users.length + 1001);
-            users.push({ name, mobile, coupon: newCoupon });
+            const coupon = 'MPB-' + (users.length + 1001);
+            users.push({ name, mobile, coupon });
             localStorage.setItem('users', JSON.stringify(users));
             renderData();
-        } else {
-            alert("Please fill in all fields");
-        }
+            alert("User Added!");
+        } else alert("Fill all fields!");
     }
 
     // Add reward
     function addReward() {
         const prize = document.getElementById('rewardPrize').value.trim();
-        const gift = document.getElementById('rewardGift').value.trim();
-        if (prize && gift) {
-            rewards.push({ prize, gift });
+        if (prize) {
+            rewards.push({ prize });
             localStorage.setItem('rewards', JSON.stringify(rewards));
             renderData();
-        } else {
-            alert("Please fill in all fields");
-        }
+            alert("Reward Added!");
+        } else alert("Enter a reward!");
     }
 
     // Draw winner
@@ -153,10 +135,11 @@
         const reward = rewards.pop();
         const winner = users.splice(winnerIndex, 1)[0];
 
-        winners.push({ list: listNumber, ...winner, prize: reward.prize });
+        winners.push({ ...winner, prize: reward.prize });
         localStorage.setItem('users', JSON.stringify(users));
         localStorage.setItem('rewards', JSON.stringify(rewards));
         localStorage.setItem('winners', JSON.stringify(winners));
+
         alert(`${winner.name} wins ${reward.prize}!`);
         renderData();
     }
@@ -164,12 +147,39 @@
     // Reset data
     function resetData() {
         if (confirm("Reset all data?")) {
+            localStorage.clear();
             users = [];
             rewards = [];
             winners = [];
-            localStorage.clear();
             renderData();
         }
+    }
+
+    // Export Winners to CSV
+    function exportWinners() {
+        let csv = "Name,Coupon,Prize\n";
+        winners.forEach(w => csv += `${w.name},${w.coupon},${w.prize}\n`);
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'winners.csv';
+        link.click();
+    }
+
+    // Render data
+    function renderData() {
+        document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
+            `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.coupon}</td></tr>`
+        ).join('');
+
+        document.getElementById('rewardTableBody').innerHTML = rewards.map((r, i) =>
+            `<tr><td>${i + 1}</td><td>${r.prize}</td></tr>`
+        ).join('');
+
+        document.getElementById('winnersTableBody').innerHTML = winners.map((w, i) =>
+            `<tr><td>${i + 1}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td></tr>`
+        ).join('');
     }
 
     renderData();
