@@ -40,8 +40,6 @@
     <table class="table table-dark">
         <thead><tr><th>S. No</th><th>Name</th><th>Coupon Code</th></tr></thead>
 <tbody id="userTableBody"></tbody>
-
-        <tbody id="userTableBody"></tbody>
     </table>
 </div>
 
@@ -248,7 +246,10 @@ Object.keys(groupedWinners).forEach(list => {
     `;
 });
 
-    function drawWinner() {
+    // Initialize listNumber if not already set
+let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
+
+function drawWinner() {
     if (users.length === 0) {
         alert('No users registered!');
         return;
@@ -304,6 +305,10 @@ function updateLuckyDrawInfo() {
     document.getElementById('totalUsers').textContent = users.length;
     document.getElementById('totalPrizes').textContent = rewards.length;
 }
+
+// Call updateLuckyDrawInfo when the app loads
+updateLuckyDrawInfo();
+
 
 
 
