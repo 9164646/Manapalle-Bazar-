@@ -7,191 +7,178 @@
     <title>Manapalle Bazar Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
-        body { background: #000; color: #fff; padding: 20px; }
-        h1 { color: #FFD700; }
-        .btn-custom { background: #FFD700; color: #000; margin: 5px; border-radius: 5px; cursor: pointer; }
-        table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-        #winnerList, #userList, #prizeList { margin-top: 20px; }
+        body { background: #f4f4f9; color: #333; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        h1 { color: #007bff; }
+        .container { max-width: 800px; margin: auto; }
         .hidden { display: none; }
+        .btn-custom { background: #007bff; color: white; margin: 5px; }
+        .table-container { max-height: 300px; overflow-y: auto; margin-top: 15px; }
+        table { width: 100%; background: #fff; margin-top: 20px; border-radius: 5px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        #winnerList, #rewardList { margin-top: 20px; }
+        .btn { margin: 5px; }
     </style>
 </head>
 <body>
-    <div class="container text-center">
+    <div class="container">
         <h1>Manapalle Bazar Lucky Draw</h1>
-        <!-- Buttons at the top -->
-        <div class="mb-3">
-            <button class="btn-custom" onclick="showAdminPanel()">Admin Panel</button>
-            <button class="btn-custom" onclick="showUserPanel()">User Panel</button>
-            <button class="btn-custom" onclick="exportCSV()">Export CSV</button>
-            <button class="btn-custom" onclick="exportPDF()">Export PDF</button>
-            <button class="btn-custom" onclick="startLuckyDraw()">Start Lucky Draw</button>
+
+        <div id="adminPanel">
+            <h3>Admin Panel</h3>
+            <button class="btn btn-custom" onclick="showUserList()">User List</button>
+            <button class="btn btn-custom" onclick="showWinnerList()">Winner List</button>
+            <button class="btn btn-custom" onclick="showRewardList()">Reward List</button>
+            <button class="btn btn-danger" onclick="startLuckyDraw()">Start Lucky Draw</button>
         </div>
 
-        <!-- Admin Login -->
-        <div id="adminLogin" class="hidden">
-            <h3>Admin Login</h3>
-            <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control w-25 mx-auto">
-            <button class="btn-custom" onclick="loginAdmin()">Login</button>
+        <div id="userForm" class="mt-4">
+            <h4>Register User</h4>
+            <input type="text" id="userName" placeholder="Enter Name" class="form-control mb-2">
+            <input type="text" id="userMobile" placeholder="Enter Mobile" class="form-control mb-2">
+            <button class="btn btn-success" onclick="registerUser()">Register</button>
         </div>
 
-        <!-- Admin Panel -->
-        <div id="adminPanel" class="hidden">
-            <h2>Admin Panel</h2>
-            <h3>Add User</h3>
-            <input type="text" id="userName" placeholder="Name" class="form-control w-25 mx-auto">
-            <input type="text" id="userMobile" placeholder="Mobile" class="form-control w-25 mx-auto">
-            <button class="btn-custom" onclick="addUser()">Add User</button>
-
-            <h3>Add Prize</h3>
-            <input type="text" id="prizeName" placeholder="Prize Name" class="form-control w-25 mx-auto">
-            <input type="number" id="prizeCount" placeholder="Number of Winners" class="form-control w-25 mx-auto">
-            <button class="btn-custom" onclick="addPrize()">Add Prize</button>
-
-            <h3>User List</h3>
-            <table id="userTable" class="table table-bordered">
-                <thead><tr><th>Name</th><th>Mobile</th><th>Coupon</th><th>Actions</th></tr></thead>
-                <tbody></tbody>
-            </table>
-
-            <h3>Prize List</h3>
-            <table id="prizeTable" class="table table-bordered">
-                <thead><tr><th>Prize</th><th>Winners</th><th>Actions</th></tr></thead>
-                <tbody></tbody>
-            </table>
+        <div id="userList" class="hidden">
+            <h4>Registered Users</h4>
+            <div class="table-container">
+                <table class="table">
+                    <thead><tr><th>Name</th><th>Coupon</th><th>Actions</th></tr></thead>
+                    <tbody id="userTable"></tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- User Panel -->
-        <div id="userPanel" class="hidden">
-            <h2>Winners</h2>
-            <table id="winnerList" class="table table-bordered">
-                <thead><tr><th>Coupon</th><th>Prize</th></tr></thead>
-                <tbody></tbody>
-            </table>
+        <div id="winnerList" class="hidden">
+            <h4>Winners</h4>
+            <div class="table-container">
+                <table class="table">
+                    <thead><tr><th>Name</th><th>Coupon</th><th>Prize</th></tr></thead>
+                    <tbody id="winnersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="rewardList" class="hidden">
+            <h4>Reward List</h4>
+            <input type="text" id="rewardName" placeholder="Reward Name" class="form-control mb-2">
+            <button class="btn btn-primary" onclick="addReward()">Add Reward</button>
+            <div class="table-container">
+                <table class="table">
+                    <thead><tr><th>Reward</th></tr></thead>
+                    <tbody id="rewardTable"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        let users = [];
-        let prizes = [];
-        let winners = [];
-        const password = "1234";
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
+        let winners = JSON.parse(localStorage.getItem('winners')) || [];
 
-        function showAdminPanel() {
-            document.getElementById('adminLogin').classList.remove('hidden');
-            document.getElementById('userPanel').classList.add('hidden');
-        }
-
-        function showUserPanel() {
-            document.getElementById('userPanel').classList.remove('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-        }
-
-        function loginAdmin() {
-            const inputPassword = document.getElementById('adminPassword').value;
-            if (inputPassword === password) {
-                document.getElementById('adminLogin').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                renderUsers();
-                renderPrizes();
-            } else {
-                alert("Incorrect Password!");
-            }
-        }
-
-        function generateCoupon() {
-            return `MPB-${Math.floor(10000 + Math.random() * 90000)}`;
-        }
-
-        function addUser() {
+        function registerUser() {
             const name = document.getElementById('userName').value;
             const mobile = document.getElementById('userMobile').value;
-            if (name && mobile) {
-                users.push({ name, mobile, coupon: generateCoupon() });
-                renderUsers();
-            } else {
-                alert('Please enter all fields');
-            }
+            if (!name || !mobile) return alert("Please fill in all fields!");
+
+            const coupon = 'MPB-' + Math.floor(10000 + Math.random() * 90000);
+            users.push({ name, mobile, coupon });
+            localStorage.setItem('users', JSON.stringify(users));
+            alert(`Registered! Coupon Code: ${coupon}`);
+            showUserList();
         }
 
-        function renderUsers() {
-            const userTable = document.querySelector('#userTable tbody');
+        function showUserList() {
+            document.getElementById('userList').classList.remove('hidden');
+            document.getElementById('winnerList').classList.add('hidden');
+            document.getElementById('rewardList').classList.add('hidden');
+
+            const userTable = document.getElementById('userTable');
             userTable.innerHTML = '';
-            users.forEach(user => {
-                userTable.innerHTML += `<tr>
-                    <td>${user.name}</td>
-                    <td>${user.mobile}</td>
-                    <td>${user.coupon}</td>
-                </tr>`;
+            users.forEach((user, index) => {
+                userTable.innerHTML += `
+                    <tr>
+                        <td>${user.name}</td>
+                        <td>${user.coupon}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="deleteUser(${index})">Delete</button>
+                        </td>
+                    </tr>`;
             });
         }
 
-        function addPrize() {
-            const prize = document.getElementById('prizeName').value;
-            const count = parseInt(document.getElementById('prizeCount').value);
-            if (prize && count > 0) {
-                prizes.push({ name: prize, count });
-                renderPrizes();
-            } else {
-                alert('Please enter valid prize and number of winners.');
+        function deleteUser(index) {
+            if (confirm("Are you sure you want to delete this user?")) {
+                users.splice(index, 1);
+                localStorage.setItem('users', JSON.stringify(users));
+                showUserList();
             }
         }
 
-        function renderPrizes() {
-            const prizeTable = document.querySelector('#prizeTable tbody');
-            prizeTable.innerHTML = '';
-            prizes.forEach(prize => {
-                prizeTable.innerHTML += `<tr>
-                    <td>${prize.name}</td>
-                    <td>${prize.count}</td>
-                </tr>`;
+        function addReward() {
+            const reward = document.getElementById('rewardName').value;
+            if (!reward) return alert("Please enter a reward!");
+
+            rewards.push(reward);
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+            showRewardList();
+        }
+
+        function showRewardList() {
+            document.getElementById('rewardList').classList.remove('hidden');
+            document.getElementById('userList').classList.add('hidden');
+            document.getElementById('winnerList').classList.add('hidden');
+
+            const rewardTable = document.getElementById('rewardTable');
+            rewardTable.innerHTML = '';
+            rewards.forEach(reward => {
+                rewardTable.innerHTML += `<tr><td>${reward}</td></tr>`;
             });
         }
 
         function startLuckyDraw() {
-            let shuffledUsers = [...users].sort(() => 0.5 - Math.random());
-            prizes.forEach(prize => {
-                for (let i = 0; i < prize.count; i++) {
-                    if (shuffledUsers.length > 0) {
-                        const winner = shuffledUsers.pop();
-                        winners.push({ coupon: winner.coupon, prize: prize.name });
-                        confetti();
-                    }
-                }
-            });
-            renderWinners();
+            if (users.length === 0 || rewards.length === 0) return alert("No participants or rewards available!");
+
+            const winnerIndex = Math.floor(Math.random() * users.length);
+            const winner = users[winnerIndex];
+            const prize = rewards[Math.floor(Math.random() * rewards.length)];
+
+            winners.push({ name: winner.name, coupon: winner.coupon, prize });
+            localStorage.setItem('winners', JSON.stringify(winners));
+
+            triggerConfetti();
+            alert(`Winner: ${winner.name}, Coupon: ${winner.coupon}, Prize: ${prize}`);
+            showWinnerList();
         }
 
-        function renderWinners() {
-            const winnerList = document.querySelector('#winnerList tbody');
-            winnerList.innerHTML = '';
+        function showWinnerList() {
+            document.getElementById('winnerList').classList.remove('hidden');
+            document.getElementById('userList').classList.add('hidden');
+            document.getElementById('rewardList').classList.add('hidden');
+
+            const winnersTable = document.getElementById('winnersTable');
+            winnersTable.innerHTML = '';
             winners.forEach(winner => {
-                winnerList.innerHTML += `<tr><td>${winner.coupon}</td><td>${winner.prize}</td></tr>`;
+                winnersTable.innerHTML += `
+                    <tr>
+                        <td>${winner.name}</td>
+                        <td>${winner.coupon}</td>
+                        <td>${winner.prize}</td>
+                    </tr>`;
             });
         }
 
-        function exportCSV() {
-            let csv = 'Coupon,Prize\n';
-            winners.forEach(winner => csv += `${winner.coupon},${winner.prize}\n`);
-            download('winners.csv', csv);
+        function triggerConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
         }
 
-        function exportPDF() {
-            const doc = new jsPDF();
-            doc.text('Winner List', 10, 10);
-            winners.forEach((winner, i) => doc.text(`${winner.coupon} - ${winner.prize}`, 10, 20 + i * 10));
-            doc.save('winners.pdf');
-        }
-
-        function download(filename, text) {
-            const blob = new Blob([text], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-        }
+        // Show user list on page load
+        window.onload = showUserList;
     </script>
 </body>
 </html>
