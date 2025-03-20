@@ -40,6 +40,48 @@
     <!-- Reward List -->
     <div id="rewardList" class="hidden">
         <h2>Rewards</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Manapalle Bazar - Lucky Draw</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        h1 { color: #FFD700; margin-bottom: 20px; }
+        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
+        th, td { padding: 10px; border: 1px solid #ddd; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Manapalle Bazar - Lucky Draw</h1>
+
+    <!-- Navigation -->
+    <div>
+        <button class="btn-custom" onclick="showSection('userList')">User List</button>
+        <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
+        <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
+        <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
+    </div>
+
+    <!-- User List -->
+    <div id="userList" class="hidden">
+        <h2>Registered Users</h2>
+        <table class="table">
+            <thead><tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Reward List -->
+    <div id="rewardList" class="hidden">
+        <h2>Rewards</h2>
         <table class="table">
             <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th></tr></thead>
             <tbody id="rewardTableBody"></tbody>
