@@ -10,7 +10,7 @@
     <style>
         body { background: #f4f4f9; color: #333; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         h1 { color: #007bff; }
-        .container { max-width: 800px; margin: auto; }
+        .container { max-width: 900px; margin: auto; }
         .hidden { display: none; }
         .btn-custom { background: #007bff; color: white; margin: 5px; }
         .table-container { max-height: 300px; overflow-y: auto; margin-top: 15px; }
@@ -23,7 +23,7 @@
 <body>
     <div class="container">
         <h1>Manapalle Bazar Lucky Draw</h1>
-
+        
         <div id="adminPanel">
             <h3>Admin Panel</h3>
             <button class="btn btn-custom" onclick="showUserList()">User List</button>
@@ -153,10 +153,6 @@
         }
 
         function showWinnerList() {
-            document.getElementById('winnerList').classList.remove('hidden');
-            document.getElementById('userList').classList.add('hidden');
-            document.getElementById('rewardList').classList.add('hidden');
-
             const winnersTable = document.getElementById('winnersTable');
             winnersTable.innerHTML = '';
             winners.forEach(winner => {
@@ -167,17 +163,15 @@
                         <td>${winner.prize}</td>
                     </tr>`;
             });
+            document.getElementById('winnerList').classList.remove('hidden');
+            document.getElementById('userList').classList.add('hidden');
+            document.getElementById('rewardList').classList.add('hidden');
         }
 
         function triggerConfetti() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
 
-        // Show user list on page load
         window.onload = showUserList;
     </script>
 </body>
