@@ -17,6 +17,8 @@
     <button class="btn btn-warning m-2" onclick="showSection('rewardList')">Rewards</button>
     <button class="btn btn-warning m-2" onclick="showSection('winnerList')">Winners</button>
     <button class="btn btn-warning m-2" onclick="window.location.href='?admin=true'">Admin</button>
+    <button class="btn btn-warning m-2" onclick="showSection('addUserSection')">Add User</button>
+
 </div>
 
 <!-- User List -->
@@ -28,6 +30,15 @@
         <tbody id="userTableBody"></tbody>
     </table>
 </div>
+
+    <!-- Add User Section -->
+<div id="addUserSection" class="hidden">
+    <h2>Add User</h2>
+    <input type="text" id="userName" placeholder="User Name" class="form-control mb-2">
+    <input type="text" id="userMobile" placeholder="Mobile Number" class="form-control mb-2">
+    <button class="btn btn-warning" onclick="addUser()">Add User</button>
+</div>
+
 
 <!-- Reward List -->
 <div id="rewardList" class="hidden">
@@ -169,6 +180,13 @@
     }
 
     renderData();
+
+    function showSection(section) {
+    document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
+    document.getElementById(section).classList.remove('hidden');
+    renderData();
+}
+
 </script>
 
 </body>
