@@ -3,48 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manapalle Bazar - Lucky Draw</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
-    <style>
-        body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        h1 { color: #FFD700; margin-bottom: 20px; }
-        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
-        table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
-        th, td { padding: 10px; border: 1px solid #ddd; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
-
-    <h1>Manapalle Bazar - Lucky Draw</h1>
-
-    <!-- Navigation -->
-    <div>
-        <button class="btn-custom" onclick="showSection('userList')">User List</button>
-        <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
-        <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
-        <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
-    </div>
-
-    <!-- User List -->
-    <div id="userList" class="hidden">
-        <h2>Registered Users</h2>
-        <table class="table">
-            <thead><tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr></thead>
-            <tbody id="userTableBody"></tbody>
-        </table>
-    </div>
-
-    <!-- Reward List -->
-    <div id="rewardList" class="hidden">
-        <h2>Rewards</h2>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -60,133 +18,135 @@
 </head>
 <body>
 
-    <h1>Manapalle Bazar - Lucky Draw</h1>
+<h1>Manapalle Bazar - Lucky Draw</h1>
 
-    <!-- Navigation -->
-    <div>
-        <button class="btn-custom" onclick="showSection('userList')">User List</button>
-        <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
-        <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
-        <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
+<!-- Navigation -->
+<div>
+    <button class="btn-custom" onclick="showSection('userList')">User List</button>
+    <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
+    <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
+    <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
+</div>
+
+<!-- User List -->
+<div id="userList" class="hidden">
+    <h2>Registered Users</h2>
+    <table class="table">
+        <thead><tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr></thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Reward List -->
+<div id="rewardList" class="hidden">
+    <h2>Rewards</h2>
+    <table class="table">
+        <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th></tr></thead>
+        <tbody id="rewardTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Winner List -->
+<div id="winnerList" class="hidden">
+    <h2>Winners</h2>
+    <table class="table">
+        <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th>Action</th></tr></thead>
+        <tbody id="winnersTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="hidden">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
+    <button class="btn-custom" onclick="validateAdmin()">Login</button>
+
+    <div id="adminActions" class="hidden">
+        <h3>Manage Rewards</h3>
+        <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
+        <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
+        <button class="btn-custom" onclick="addReward()">Add Reward</button>
+
+        <h3>Lucky Draw</h3>
+        <input type="number" id="lotNumber" placeholder="Lot No." class="form-control mb-2">
+        <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
     </div>
+</div>
 
-    <!-- User List -->
-    <div id="userList" class="hidden">
-        <h2>Registered Users</h2>
-        <table class="table">
-            <thead><tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th></tr></thead>
-            <tbody id="userTableBody"></tbody>
-        </table>
-    </div>
+<script>
+    let users = JSON.parse(localStorage.getItem('users')) || [
+        { name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' },
+        { name: 'Jane Doe', mobile: '9876543211', coupon: 'MPB-1002' }
+    ];
+    let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
+    let winners = JSON.parse(localStorage.getItem('winners')) || [];
 
-    <!-- Reward List -->
-    <div id="rewardList" class="hidden">
-        <h2>Rewards</h2>
-        <table class="table">
-            <thead><tr><th>S. No.</th><th>Prize</th><th>Gift</th></tr></thead>
-            <tbody id="rewardTableBody"></tbody>
-        </table>
-    </div>
-
-    <!-- Winner List -->
-    <div id="winnerList" class="hidden">
-        <h2>Winners</h2>
-        <table class="table">
-            <thead><tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Prize</th><th>Action</th></tr></thead>
-            <tbody id="winnersTableBody"></tbody>
-        </table>
-    </div>
-
-    <!-- Admin Panel -->
-    <div id="adminPanel" class="hidden">
-        <h2>Admin Login</h2>
-        <input type="password" id="adminPassword" placeholder="Enter Password" class="form-control mb-2">
-        <button class="btn-custom" onclick="validateAdmin()">Login</button>
-
-        <div id="adminActions" class="hidden">
-            <h3>Manage Rewards</h3>
-            <input type="text" id="rewardPrize" placeholder="Prize Name" class="form-control mb-2">
-            <input type="text" id="rewardGift" placeholder="Gift Name" class="form-control mb-2">
-            <button class="btn-custom" onclick="addReward()">Add Reward</button>
-
-            <h3>Lucky Draw</h3>
-            <input type="number" id="lotNumber" placeholder="Lot No." class="form-control mb-2">
-            <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
-        </div>
-    </div>
-
-    <script>
-        let users = JSON.parse(localStorage.getItem('users')) || [
-            { name: 'John Doe', mobile: '9876543210', coupon: 'MPB-1001' },
-            { name: 'Jane Doe', mobile: '9876543211', coupon: 'MPB-1002' }
-        ];
-
-        let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
-        let winners = JSON.parse(localStorage.getItem('winners')) || [];
-
-        function showSection(section) {
-            document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
-            document.getElementById(section).classList.remove('hidden');
-            renderData();
-        }
-
-        function renderData() {
-            document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
-                `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.coupon}</td></tr>`
-            ).join('');
-
-            document.getElementById('rewardTableBody').innerHTML = rewards.map((r, i) =>
-                `<tr><td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td></tr>`
-            ).join('');
-
-            document.getElementById('winnersTableBody').innerHTML = winners.map((w, i) =>
-                `<tr><td>${w.lot}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td>
-                <td><button onclick="deleteWinner(${i})">Delete</button></td></tr>`
-            ).join('');
-        }
-
-        function validateAdmin() {
-            if (document.getElementById('adminPassword').value === '1234') {
-                document.getElementById('adminActions').classList.remove('hidden');
-            } else {
-                alert('Wrong password!');
-            }
-        }
-
-        function addReward() {
-            const prize = document.getElementById('rewardPrize').value.trim();
-            const gift = document.getElementById('rewardGift').value.trim();
-            if (prize && gift) {
-                rewards.push({ prize, gift });
-                localStorage.setItem('rewards', JSON.stringify(rewards));
-                renderData();
-            }
-        }
-
-        function drawWinner() {
-            if (users.length === 0 || rewards.length === 0) {
-                alert('No participants or rewards available!');
-                return;
-            }
-            const winner = users[Math.floor(Math.random() * users.length)];
-            const prize = rewards.shift();
-            const lot = document.getElementById('lotNumber').value || winners.length + 1;
-            winners.push({ lot, name: winner.name, coupon: winner.coupon, prize: prize.prize });
-
-            localStorage.setItem('winners', JSON.stringify(winners));
-            localStorage.setItem('rewards', JSON.stringify(rewards));
-            confetti();
-            renderData();
-        }
-
-        function deleteWinner(index) {
-            winners.splice(index, 1);
-            localStorage.setItem('winners', JSON.stringify(winners));
-            renderData();
-        }
-
+    function showSection(section) {
+        document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
+        document.getElementById(section).classList.remove('hidden');
         renderData();
-    </script>
+    }
+
+    function renderData() {
+        // User Table
+        document.getElementById('userTableBody').innerHTML = users.map((u, i) =>
+            `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.coupon}</td></tr>`
+        ).join('');
+
+        // Rewards Table
+        document.getElementById('rewardTableBody').innerHTML = rewards.map((r, i) =>
+            `<tr><td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td></tr>`
+        ).join('');
+
+        // Winners Table
+        document.getElementById('winnersTableBody').innerHTML = winners.map((w, i) =>
+            `<tr><td>${w.lot}</td><td>${w.name}</td><td>${w.coupon}</td><td>${w.prize}</td>
+            <td><button onclick="deleteWinner(${i})" class="btn btn-danger btn-sm">Delete</button></td></tr>`
+        ).join('');
+    }
+
+    function validateAdmin() {
+        if (document.getElementById('adminPassword').value === '1234') {
+            document.getElementById('adminActions').classList.remove('hidden');
+        } else {
+            alert('Wrong password!');
+        }
+    }
+
+    function addReward() {
+        const prize = document.getElementById('rewardPrize').value.trim();
+        const gift = document.getElementById('rewardGift').value.trim();
+        if (prize && gift) {
+            rewards.push({ prize, gift });
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+            renderData();
+        }
+    }
+
+    function drawWinner() {
+        if (users.length === 0 || rewards.length === 0) {
+            alert('No participants or rewards available!');
+            return;
+        }
+        const winner = users[Math.floor(Math.random() * users.length)];
+        const prize = rewards.shift();
+        const lot = document.getElementById('lotNumber').value || winners.length + 1;
+        winners.push({ lot, name: winner.name, coupon: winner.coupon, prize: prize.prize });
+
+        localStorage.setItem('winners', JSON.stringify(winners));
+        localStorage.setItem('rewards', JSON.stringify(rewards));
+        confetti();
+        renderData();
+    }
+
+    function deleteWinner(index) {
+        winners.splice(index, 1);
+        localStorage.setItem('winners', JSON.stringify(winners));
+        renderData();
+    }
+
+    renderData();
+</script>
 
 </body>
 </html>
