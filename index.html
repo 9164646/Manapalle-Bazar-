@@ -278,6 +278,7 @@ localStorage.setItem('users', JSON.stringify(users));
         coupon: winner.coupon,
         prize: reward.prize
     });
+document.getElementById('luckyDrawSection').classList.remove('hidden');
 
     // Save updated data
     localStorage.setItem('winners', JSON.stringify(winners));
