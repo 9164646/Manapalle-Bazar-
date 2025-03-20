@@ -106,6 +106,8 @@
     ];
     let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
     let winners = JSON.parse(localStorage.getItem('winners')) || [];
+    let lotNumber = JSON.parse(localStorage.getItem('lotNumber')) || 1;
+
 
     if (isAdmin) document.getElementById('adminLogin').classList.remove('hidden');
 
@@ -258,6 +260,54 @@ Object.keys(groupedWinners).forEach(list => {
         </table>
     `;
 });
+
+    function drawWinner() {
+    if (users.length === 0) {
+        alert('No users registered!');
+        return;
+    }
+    if (rewards.length === 0) {
+        alert('No prizes available!');
+        return;
+    }
+
+    const winnerIndex = Math.floor(Math.random() * users.length);
+    const reward = rewards.pop();
+    const winner = users[winnerIndex];
+
+    winners.push({
+        lot: lotNumber,
+        name: winner.name,
+        coupon: winner.coupon,
+        prize: reward.prize
+    });
+
+    // Save updated data
+    localStorage.setItem('winners', JSON.stringify(winners));
+    localStorage.setItem('rewards', JSON.stringify(rewards));
+
+    alert(`${winner.name} won ${reward.prize}!`);
+    confetti();
+    renderData();
+    updateLuckyDrawInfo();
+}
+
+// Increment lot after each draw
+function startDraw() {
+    if (users.length === 0) {
+        alert('No users registered!');
+        return;
+    }
+    if (rewards.length === 0) {
+        alert('No prizes available!');
+        return;
+    }
+    
+    lotNumber++;
+    localStorage.setItem('lotNumber', lotNumber);
+    showSection('winnerList');
+    alert(`Lucky Draw Started! Lot ${lotNumber}`);
+}
 
 
 </script>
