@@ -66,6 +66,9 @@
     </div>
 </div>
 
+    <!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
 <script>
     // Data handling
     let users = JSON.parse(localStorage.getItem('users')) || [];
@@ -140,7 +143,7 @@ function addUser() {
         } else alert("Enter a reward!");
     }
 
-    // Draw winner
+    // Draw Winner with Confetti
     function drawWinner() {
         if (users.length === 0 || rewards.length === 0) return alert("No users or prizes left!");
 
@@ -153,9 +156,49 @@ function addUser() {
         localStorage.setItem('rewards', JSON.stringify(rewards));
         localStorage.setItem('winners', JSON.stringify(winners));
 
-        alert(`${winner.name} wins ${reward.prize}!`);
-        renderData();
+        showConfetti();
+        setTimeout(() => {
+            alert(`${winner.name} wins ${reward.prize}!`);
+            renderData();
+        }, 2000);
     }
+
+    // Confetti Animation
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const confetti = [];
+
+    function showConfetti() {
+        for (let i = 0; i < 200; i++) {
+            confetti.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 8 + 2,
+                speed: Math.random() * 4 + 2,
+            });
+        }
+        animateConfetti();
+        setTimeout(() => {
+            confetti.length = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 3000);
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach((c) => {
+            c.y += c.speed;
+            ctx.fillStyle = c.color;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        requestAnimationFrame(animateConfetti);
+    }
+
 
     // Reset data
     function resetData() {
@@ -196,10 +239,19 @@ function addUser() {
     }
 
     renderData();
+
+    
 </script>
 
 <style>
     .hidden { display: none; }
+    .hidden { display: none; }
+    #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+    }
 </style>
 
 </body>
