@@ -212,22 +212,24 @@
         }
     }
 
-    function renderData() {
-        const userTableBody = document.getElementById('userTableBody');
-        userTableBody.innerHTML = '';
-        users.forEach((user, index) => {
-            userTableBody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${user.name}</td>
-                    <td>${user.coupon}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
-                </tr>
-            `;
-        });
-    }
+    
 
-    renderData();
+        function renderData() {
+    const userTableBody = document.getElementById('userTableBody');
+    userTableBody.innerHTML = '';
+    users.forEach((user, index) => {
+        userTableBody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${user.name}</td>
+                <td>${user.coupon}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${index})">Delete</button></td>
+            </tr>
+        `;
+    });
+    updateLuckyDrawInfo();
+}
+
 
     function addReward() {
         const prize = document.getElementById('rewardPrize').value.trim();
@@ -296,62 +298,63 @@ let listNumber = JSON.parse(localStorage.getItem('listNumber')) || 1;
 
 function drawWinner() {
     if (users.length === 0) {
-        alert('No users registered!');
+        showToast('No users to draw from!');
         return;
     }
     if (rewards.length === 0) {
-        alert('No prizes available!');
+        showToast('No prizes available!');
         return;
     }
 
-    const winnerIndex = Math.floor(Math.random() * users.length);
-    const reward = rewards.pop();
-    const winner = users[winnerIndex];
-
-    winners.push({
-        lot: listNumber,
-        name: winner.name,
-        coupon: winner.coupon,
-        prize: reward.prize
-    });
-
-    // Remove winner from users after adding to winners
-    users.splice(winnerIndex, 1);
+    // Animation: Spin the names for excitement
+    showSection('winnerSection');
+    const winnerDisplay = document.getElementById('winnerDisplay');
+    winnerDisplay.innerHTML = "Drawing...";
     
-    // Save updated data
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('winners', JSON.stringify(winners));
-    localStorage.setItem('rewards', JSON.stringify(rewards));
+    let counter = 15;
+    let drawAnimation = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * users.length);
+        winnerDisplay.innerText = users[randomIndex].name;
+        counter--;
+        if (counter <= 0) {
+            clearInterval(drawAnimation);
 
-    alert(`🎉 ${winner.name} won ${reward.prize}!`);
-    confetti();
-    renderData();
-    updateLuckyDrawInfo();
+            // Pick the actual winner
+            const winnerIndex = Math.floor(Math.random() * users.length);
+            const winner = users[winnerIndex];
+            const reward = rewards.pop();  // Assign the latest reward
+
+            // Add the winner to the winners list
+            winners.push({
+                lot: listNumber,
+                name: winner.name,
+                coupon: winner.coupon,
+                prize: reward.prize
+            });
+
+            // Remove winner from users
+            users.splice(winnerIndex, 1);
+            
+            // Save updated data
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('winners', JSON.stringify(winners));
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+
+            // Show the final winner announcement
+            winnerDisplay.innerHTML = `${winner.name} (Coupon: ${winner.coupon}) won ${reward.prize}!`;
+            showToast(`${winner.name} is the winner of ${reward.prize}!`);
+            confetti();
+            renderData();
+            updateLuckyDrawInfo();
+        }
+    }, 100);
 }
 
-function drawWinner() {
-        if (users.length === 0) {
-            showToast('No users to draw from!');
-            return;
-        }
-        let winnerIndex = Math.floor(Math.random() * users.length);
-        let winner = users[winnerIndex];
+        function updateLuckyDrawInfo() {
+    document.getElementById('totalUsers').innerText = users.length;
+    document.getElementById('totalPrizes').innerText = rewards.length;
+}
 
-        showSection('winnerSection');
-        const winnerDisplay = document.getElementById('winnerDisplay');
-        winnerDisplay.innerHTML = "Drawing...";
-        let counter = 10;
-        let drawAnimation = setInterval(() => {
-            winnerDisplay.innerText = users[Math.floor(Math.random() * users.length)].name;
-            counter--;
-            if (counter <= 0) {
-                clearInterval(drawAnimation);
-                winnerDisplay.innerHTML = `${winner.name} (Coupon: ${winner.coupon})`;
-                showToast(`${winner.name} is the winner!`);
-                confetti();
-            }
-        }, 100);
-    }
 
     function deleteUser(index) {
         if (confirm(`Are you sure you want to delete ${users[index].name}?`)) {
