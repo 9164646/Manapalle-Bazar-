@@ -7,154 +7,176 @@
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
     <style>
-        body { background: #000; color: #fff; text-align: center; padding: 20px; }
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         h1 { color: #FFD700; margin-bottom: 20px; }
-        .btn-custom { background: #FFD700; color: #000; border: none; margin: 5px; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
-        table { background: #fff; color: #000; margin-top: 20px; border-radius: 5px; width: 100%; }
+        .btn-custom { background: #FFD700; color: #000; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        table { width: 100%; background: #fff; color: #000; margin-top: 20px; border-radius: 5px; }
         th, td { padding: 10px; border: 1px solid #ddd; }
         .hidden { display: none; }
+        .edit-btn, .delete-btn { cursor: pointer; margin: 0 5px; color: red; }
     </style>
 </head>
 <body>
     <h1>Manapalle Bazar - Lucky Draw</h1>
-    
-    <!-- Navigation -->
+
     <div>
+        <button class="btn-custom" onclick="showSection('registrationForm')">Register</button>
         <button class="btn-custom" onclick="showSection('userList')">User List</button>
         <button class="btn-custom" onclick="showSection('rewardList')">Rewards</button>
         <button class="btn-custom" onclick="showSection('winnerList')">Winners</button>
-        <button class="btn-custom" onclick="adminLogin()">Admin Panel</button>
+        <button class="btn-custom" onclick="showSection('adminPanel')">Admin Panel</button>
     </div>
 
-    <!-- Admin Login -->
-    <div id="adminLogin" class="hidden">
-        <h2>Admin Login</h2>
-        <input type="password" id="adminPassword" placeholder="Enter Admin Password" class="form-control mb-2">
-        <button class="btn-custom" onclick="validateAdmin()">Login</button>
-    </div>
-
-    <!-- Admin Panel -->
-    <div id="adminPanel" class="hidden">
-        <h2>Admin Panel</h2>
-        <button class="btn-custom" onclick="addReward()">Add Reward</button>
-        <input type="text" id="rewardInput" placeholder="Reward Name" class="form-control mb-2">
-        <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
+    <!-- Registration Form -->
+    <div id="registrationForm" class="hidden">
+        <h2>Register</h2>
+        <input type="text" id="userName" placeholder="Enter Name" class="form-control mb-2">
+        <input type="text" id="userMobile" placeholder="Enter Mobile Number" class="form-control mb-2">
+        <button class="btn-custom" onclick="registerUser()">Register</button>
     </div>
 
     <!-- User List -->
     <div id="userList" class="hidden">
-        <h2>Users</h2>
-        <table id="userTable">
-            <thead><tr><th>Name</th><th>Mobile</th><th>Coupon</th><th class="admin-only hidden">Actions</th></tr></thead>
+        <h2>Registered Users</h2>
+        <table class="table">
+            <thead>
+                <tr><th>S. No.</th><th>Name</th><th>Mobile</th><th>Coupon Code</th><th>Actions</th></tr>
+            </thead>
             <tbody id="userTableBody"></tbody>
         </table>
     </div>
 
     <!-- Reward List -->
     <div id="rewardList" class="hidden">
-        <h2>Rewards</h2>
-        <table>
-            <thead><tr><th>Reward</th><th class="admin-only hidden">Actions</th></tr></thead>
+        <h2>Reward List</h2>
+        <table class="table">
+            <thead>
+                <tr><th>S. No.</th><th>Prize</th><th>Gift</th><th>Actions</th></tr>
+            </thead>
             <tbody id="rewardTableBody"></tbody>
         </table>
     </div>
 
-    <!-- Winner List -->
+    <!-- Winners List -->
     <div id="winnerList" class="hidden">
         <h2>Winners</h2>
-        <table>
-            <thead><tr><th>Name</th><th>Coupon</th><th>Reward</th></tr></thead>
+        <table class="table">
+            <thead>
+                <tr><th>Lot No.</th><th>Name</th><th>Coupon Code</th><th>Reward</th></tr>
+            </thead>
             <tbody id="winnersTableBody"></tbody>
         </table>
     </div>
 
-<script>
-    let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
-    let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
-    let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
-    let isAdmin = false;
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="hidden">
+        <h2>Admin Login</h2>
+        <input type="password" id="adminPassword" placeholder="Enter Admin Password" class="form-control mb-2">
+        <button class="btn-custom" onclick="validateAdmin()">Login</button>
 
-    function showSection(sectionId) {
-        ['userList', 'rewardList', 'winnerList', 'adminLogin', 'adminPanel']
-            .forEach(id => document.getElementById(id).classList.add('hidden'));
-        document.getElementById(sectionId).classList.remove('hidden');
-        renderUserList();
-        renderRewardList();
-        renderWinners();
-    }
+        <div id="adminActions" class="hidden">
+            <h3>Manage Rewards</h3>
+            <input type="text" id="prizeInput" placeholder="Enter Prize" class="form-control mb-2">
+            <input type="text" id="giftInput" placeholder="Enter Gift" class="form-control mb-2">
+            <button class="btn-custom" onclick="addReward()">Add Reward</button>
 
-    function adminLogin() {
-        showSection('adminLogin');
-    }
+            <h3>Start Lucky Draw</h3>
+            <button class="btn-custom" onclick="drawWinner()">Draw Winner</button>
+        </div>
+    </div>
 
-    function validateAdmin() {
-        if (document.getElementById('adminPassword').value === '1234') {
-            isAdmin = true;
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-            showSection('adminPanel');
-        } else {
-            alert('Wrong Password');
+    <script>
+        let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
+        let rewards = JSON.parse(localStorage.getItem('manapalleRewards')) || [];
+        let winners = JSON.parse(localStorage.getItem('manapalleWinners')) || [];
+
+        function showSection(sectionId) {
+            ['registrationForm', 'userList', 'rewardList', 'winnerList', 'adminPanel'].forEach(id =>
+                document.getElementById(id).classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            renderAll();
         }
-    }
 
-    function renderUserList() {
-        const userTableBody = document.getElementById('userTableBody');
-        userTableBody.innerHTML = users.map((u, i) =>
-            `<tr><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td>${
-                isAdmin ? `<td class="admin-only"><button onclick="deleteUser(${i})">Delete</button></td>` : ''
-            }</tr>`).join('');
-    }
+        function renderAll() {
+            renderUserList();
+            renderRewardList();
+            renderWinners();
+        }
 
-    function deleteUser(index) {
-        users.splice(index, 1);
-        localStorage.setItem('manapalleUsers', JSON.stringify(users));
-        renderUserList();
-    }
+        function registerUser() {
+            const name = document.getElementById('userName').value.trim();
+            const mobile = document.getElementById('userMobile').value.trim();
+            const couponCode = `MPB-${10000 + users.length + 1}`;
+            users.push({ name, mobile, couponCode });
+            localStorage.setItem('manapalleUsers', JSON.stringify(users));
+            alert(`Registered! Coupon Code: ${couponCode}`);
+            renderUserList();
+        }
 
-    function renderRewardList() {
-        const rewardTableBody = document.getElementById('rewardTableBody');
-        rewardTableBody.innerHTML = rewards.map((r, i) =>
-            `<tr><td>${r}</td>${
-                isAdmin ? `<td class="admin-only"><button onclick="deleteReward(${i})">Delete</button></td>` : ''
-            }</tr>`).join('');
-    }
+        function renderUserList() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = users.map((u, i) =>
+                `<tr>
+                    <td>${i + 1}</td><td>${u.name}</td><td>${u.mobile}</td><td>${u.couponCode}</td>
+                    <td><span class="delete-btn" onclick="deleteUser(${i})">❌</span></td>
+                </tr>`
+            ).join('');
+        }
 
-    function addReward() {
-        const reward = document.getElementById('rewardInput').value.trim();
-        if (reward) {
-            rewards.push(reward);
+        function deleteUser(index) {
+            users.splice(index, 1);
+            localStorage.setItem('manapalleUsers', JSON.stringify(users));
+            renderUserList();
+        }
+
+        function addReward() {
+            const prize = document.getElementById('prizeInput').value.trim();
+            const gift = document.getElementById('giftInput').value.trim();
+            rewards.push({ prize, gift });
             localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
-            alert('Reward Added');
             renderRewardList();
         }
-    }
 
-    function deleteReward(index) {
-        rewards.splice(index, 1);
-        localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
-        renderRewardList();
-    }
+        function renderRewardList() {
+            const tbody = document.getElementById('rewardTableBody');
+            tbody.innerHTML = rewards.map((r, i) =>
+                `<tr>
+                    <td>${i + 1}</td><td>${r.prize}</td><td>${r.gift}</td>
+                    <td><span class="delete-btn" onclick="deleteReward(${i})">❌</span></td>
+                </tr>`
+            ).join('');
+        }
 
-    function drawWinner() {
-        if (users.length === 0 || rewards.length === 0) return alert('No users or rewards available!');
-        const winner = users[Math.floor(Math.random() * users.length)];
-        const reward = rewards.shift();
-        winners.push({ ...winner, reward });
-        localStorage.setItem('manapalleWinners', JSON.stringify(winners));
-        localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
-        alert(`Winner: ${winner.name} - ${reward}`);
-        confetti();
-        renderWinners();
-    }
+        function deleteReward(index) {
+            rewards.splice(index, 1);
+            localStorage.setItem('manapalleRewards', JSON.stringify(rewards));
+            renderRewardList();
+        }
 
-    function renderWinners() {
-        const winnersTableBody = document.getElementById('winnersTableBody');
-        winnersTableBody.innerHTML = winners.map(w =>
-            `<tr><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`).join('');
-    }
+        function drawWinner() {
+            const winner = users[Math.floor(Math.random() * users.length)];
+            const reward = rewards.shift();
+            winners.push({ lot: winners.length + 1, ...winner, reward: reward.gift });
+            localStorage.setItem('manapalleWinners', JSON.stringify(winners));
+            renderWinners();
+        }
 
-    showSection('userList');
-</script>
+        function renderWinners() {
+            const tbody = document.getElementById('winnersTableBody');
+            tbody.innerHTML = winners.map((w) =>
+                `<tr><td>Lot ${w.lot}</td><td>${w.name}</td><td>${w.couponCode}</td><td>${w.reward}</td></tr>`
+            ).join('');
+        }
+
+        function validateAdmin() {
+            if (document.getElementById('adminPassword').value === '1234') {
+                document.getElementById('adminActions').classList.remove('hidden');
+            }
+        }
+
+        renderAll();
+    </script>
 </body>
 </html>
