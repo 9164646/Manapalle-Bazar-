@@ -7,6 +7,7 @@
     <title>Manapalle Bazar - Lucky Draw</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
         body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         h1 { color: #FFD700; margin-bottom: 20px; }
@@ -41,8 +42,18 @@
         </table>
     </div>
 
+    <!-- Lucky Draw -->
+    <button class="btn-custom mt-3" onclick="startLuckyDraw()">Start Lucky Draw</button>
+
+    <!-- Winner Lists -->
+    <div id="allWinnerLists" class="hidden">
+        <h2>Past Draws</h2>
+        <div id="winnerListsContainer"></div>
+    </div>
+
     <script>
         let users = JSON.parse(localStorage.getItem('manapalleUsers')) || [];
+        let winnerLists = JSON.parse(localStorage.getItem('manapalleWinnerLists')) || [];
 
         function updateTotalCoupons() {
             document.getElementById('totalCoupons').textContent = users.length;
@@ -69,6 +80,11 @@
 
             renderUserList();
             updateTotalCoupons();
+
+            // Automatic draw every 100 members
+            if (users.length % 100 === 0) {
+                startLuckyDraw();
+            }
         }
 
         function renderUserList() {
@@ -85,8 +101,71 @@
             });
         }
 
+        function startLuckyDraw() {
+            if (users.length === 0) {
+                alert("No participants registered!");
+                return;
+            }
+
+            let shuffled = [...users].sort(() => 0.5 - Math.random());
+            let winners = shuffled.slice(0, 5);  // 5 Random winners
+
+            // Save the winners
+            winnerLists.push(winners);
+            localStorage.setItem('manapalleWinnerLists', JSON.stringify(winnerLists));
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            renderWinnerLists();
+        }
+
+        function renderWinnerLists() {
+            const container = document.getElementById('winnerListsContainer');
+            container.innerHTML = '';
+            winnerLists.forEach((winners, index) => {
+                const listId = `list${index + 1}`;
+                container.innerHTML += `
+                    <h4>Winner List ${index + 1}</h4>
+                    <button class="btn-custom" onclick="exportCSV(${index})">Export CSV</button>
+                    <button class="btn-custom" onclick="exportPDF(${index})">Export PDF</button>
+                    <ul id="${listId}">
+                        ${winners.map(w => `<li>${w.couponCode} - ${w.name}</li>`).join('')}
+                    </ul>
+                    <hr>
+                `;
+            });
+            document.getElementById('allWinnerLists').classList.remove('hidden');
+        }
+
+        function exportCSV(index) {
+            let csvContent = "Name,Mobile,Coupon Code\n";
+            winnerLists[index].forEach(user => {
+                csvContent += `${user.name},${user.mobile},${user.couponCode}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Winner_List_${index + 1}.csv`;
+            link.click();
+        }
+
+        function exportPDF(index) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(`Manapalle Bazar - Winner List ${index + 1}`, 10, 10);
+
+            let y = 20;
+            winnerLists[index].forEach((user, i) => {
+                doc.text(`${i + 1}. Name: ${user.name}, Mobile: ${user.mobile}, Coupon: ${user.couponCode}`, 10, y);
+                y += 10;
+            });
+
+            doc.save(`Winner_List_${index + 1}.pdf`);
+        }
+
         // Initial render on page load
         renderUserList();
+        renderWinnerLists();
         updateTotalCoupons();
     </script>
 </body>
